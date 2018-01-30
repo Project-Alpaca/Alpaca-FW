@@ -1,0 +1,54 @@
+diff -Npur teensy/builder/frameworks/arduino.py teensy-ds4/builder/frameworks/arduino.py
+--- teensy/builder/frameworks/arduino.py	2017-12-29 13:02:25.000000000 -0400
++++ teensy-ds4/builder/frameworks/arduino.py	2017-12-23 23:35:56.052556364 -0400
+@@ -30,8 +30,8 @@ from SCons.Script import DefaultEnvironm
+ env = DefaultEnvironment()
+ platform = env.PioPlatform()
+ 
+-FRAMEWORK_DIR = platform.get_package_dir("framework-arduinoteensy")
+-FRAMEWORK_VERSION = platform.get_package_version("framework-arduinoteensy")
++FRAMEWORK_DIR = platform.get_package_dir("framework-arduinoteensy-ds4")
++FRAMEWORK_VERSION = platform.get_package_version("framework-arduinoteensy-ds4")
+ assert isdir(FRAMEWORK_DIR)
+ 
+ BUILTIN_USB_FLAGS = (
+diff -Npur teensy/platform.json teensy-ds4/platform.json
+--- teensy/platform.json	2017-12-29 13:02:25.000000000 -0400
++++ teensy-ds4/platform.json	2018-01-29 23:29:41.502318513 -0400
+@@ -1,5 +1,5 @@
+ {
+-  "name": "teensy",
++  "name": "teensy-ds4",
+   "title": "Teensy",
+   "description": "Teensy is a complete USB-based microcontroller development system, in a very small footprint, capable of implementing many types of projects. All programming is done via the USB port. No special programmer is needed, only a standard USB cable and a PC or Macintosh with a USB port.",
+   "url": "https://www.pjrc.com/teensy",
+@@ -19,7 +19,7 @@
+   ],
+   "frameworks": {
+     "arduino": {
+-      "package": "framework-arduinoteensy",
++      "package": "framework-arduinoteensy-ds4",
+       "script": "builder/frameworks/arduino.py"
+     },
+     "mbed": {
+@@ -38,7 +38,7 @@
+       "optional": true,
+       "version": "~1.50401.0"
+     },
+-    "framework-arduinoteensy": {
++    "framework-arduinoteensy-ds4": {
+       "type": "framework",
+       "optional": true,
+       "version": "~1.140.0"
+diff -Npur teensy/platform.py teensy-ds4/platform.py
+--- teensy/platform.py	2017-12-29 13:02:25.000000000 -0400
++++ teensy-ds4/platform.py	2017-12-23 23:33:49.616400479 -0400
+@@ -15,7 +15,7 @@
+ from platformio.managers.platform import PlatformBase
+ 
+ 
+-class TeensyPlatform(PlatformBase):
++class Teensyds4Platform(PlatformBase):
+ 
+     def configure_default_packages(self, variables, targets):
+         if variables.get("board"):
