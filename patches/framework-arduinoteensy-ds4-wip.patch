@@ -1,0 +1,1041 @@
+diff -Npur framework-arduinoteensy/cores/teensy3/usb_desc.c framework-arduinoteensy-ds4/cores/teensy3/usb_desc.c
+--- framework-arduinoteensy/cores/teensy3/usb_desc.c	2017-11-09 19:16:45.000000000 -0400
++++ framework-arduinoteensy-ds4/cores/teensy3/usb_desc.c	2018-01-29 23:09:14.054087610 -0400
+@@ -447,6 +447,90 @@ static uint8_t flightsim_report_desc[] =
+ };
+ #endif
+ 
++#ifdef DS4_INTERFACE
++// This is actually the Hori FPS report descriptor since retail PS4s did not
++// respond to reports from a wired DS4
++static uint8_t ds4_report_desc[] = {
++        0x05, 0x01,       /*  Usage Page (Desktop),           */
++        0x09, 0x05,       /*  Usage (Gamepad),                */
++        0xA1, 0x01,       /*  Collection (Application),       */
++        0x85, 0x01,       /*    Report ID (1),                */
++        0x09, 0x30,       /*    Usage (X),                    */
++        0x09, 0x31,       /*    Usage (Y),                    */
++        0x09, 0x32,       /*    Usage (Z),                    */
++        0x09, 0x35,       /*    Usage (Rz),                   */
++        0x15, 0x00,       /*    Logical Minimum (0),          */
++        0x26, 0xFF, 0x00, /*    Logical Maximum (255),        */
++        0x75, 0x08,       /*    Report Size (8),              */
++        0x95, 0x04,       /*    Report Count (4),             */
++        0x81, 0x02,       /*    Input (Variable),             */
++        0x09, 0x39,       /*    Usage (Hat Switch),           */
++        0x15, 0x00,       /*    Logical Minimum (0),          */
++        0x25, 0x07,       /*    Logical Maximum (7),          */
++        0x35, 0x00,       /*    Physical Minimum (0),         */
++        0x46, 0x3B, 0x01, /*    Physical Maximum (315),       */
++        0x65, 0x14,       /*    Unit (Degrees),               */
++        0x75, 0x04,       /*    Report Size (4),              */
++        0x95, 0x01,       /*    Report Count (1),             */
++        0x81, 0x42,       /*    Input (Variable, Null State), */
++        0x65, 0x00,       /*    Unit,                         */
++        0x05, 0x09,       /*    Usage Page (Button),          */
++        0x19, 0x01,       /*    Usage Minimum (01h),          */
++        0x29, 0x0E,       /*    Usage Maximum (0Eh),          */
++        0x15, 0x00,       /*    Logical Minimum (0),          */
++        0x25, 0x01,       /*    Logical Maximum (1),          */
++        0x75, 0x01,       /*    Report Size (1),              */
++        0x95, 0x0E,       /*    Report Count (14),            */
++        0x81, 0x02,       /*    Input (Variable),             */
++        0x06, 0x00, 0xFF, /*    Usage Page (FF00h),           */
++        0x09, 0x20,       /*    Usage (20h),                  */
++        0x75, 0x06,       /*    Report Size (6),              */
++        0x95, 0x01,       /*    Report Count (1),             */
++        0x81, 0x02,       /*    Input (Variable),             */
++        0x05, 0x01,       /*    Usage Page (Desktop),         */
++        0x09, 0x33,       /*    Usage (Rx),                   */
++        0x09, 0x34,       /*    Usage (Ry),                   */
++        0x15, 0x00,       /*    Logical Minimum (0),          */
++        0x26, 0xFF, 0x00, /*    Logical Maximum (255),        */
++        0x75, 0x08,       /*    Report Size (8),              */
++        0x95, 0x02,       /*    Report Count (2),             */
++        0x81, 0x02,       /*    Input (Variable),             */
++        0x06, 0x00, 0xFF, /*    Usage Page (FF00h),           */
++        0x09, 0x21,       /*    Usage (21h),                  */
++        0x95, 0x36,       /*    Report Count (54),            */
++        0x81, 0x02,       /*    Input (Variable),             */
++        0x85, 0x05,       /*    Report ID (5),                */
++        0x09, 0x22,       /*    Usage (22h),                  */
++        0x95, 0x1F,       /*    Report Count (31),            */
++        0x91, 0x02,       /*    Output (Variable),            */
++        0x85, 0x03,       /*    Report ID (3),                */
++        0x0A, 0x21, 0x27, /*    Usage (2721h),                */
++        0x95, 0x2F,       /*    Report Count (47),            */
++        0xB1, 0x02,       /*    Feature (Variable),           */
++        0xC0,             /*  End Collection,                 */
++        0x06, 0xF0, 0xFF, /*  Usage Page (FFF0h),             */
++        0x09, 0x40,       /*  Usage (40h),                    */
++        0xA1, 0x01,       /*  Collection (Application),       */
++        0x85, 0xF0,       /*    Report ID (240),              */
++        0x09, 0x47,       /*    Usage (47h),                  */
++        0x95, 0x3F,       /*    Report Count (63),            */
++        0xB1, 0x02,       /*    Feature (Variable),           */
++        0x85, 0xF1,       /*    Report ID (241),              */
++        0x09, 0x48,       /*    Usage (48h),                  */
++        0x95, 0x3F,       /*    Report Count (63),            */
++        0xB1, 0x02,       /*    Feature (Variable),           */
++        0x85, 0xF2,       /*    Report ID (242),              */
++        0x09, 0x49,       /*    Usage (49h),                  */
++        0x95, 0x0F,       /*    Report Count (15),            */
++        0xB1, 0x02,       /*    Feature (Variable),           */
++        0x85, 0xF3,       /*    Report ID (243),              */
++        0x0A, 0x01, 0x47, /*    Usage (4701h),                */
++        0x95, 0x07,       /*    Report Count (7),             */
++        0xB1, 0x02,       /*    Feature (Variable),           */
++        0xC0              /*  End Collection                  */
++};
++
++#endif
+ 
+ // **************************************************************
+ //   USB Descriptor Sizes
+@@ -555,7 +639,15 @@ static uint8_t flightsim_report_desc[] =
+ #define MULTITOUCH_INTERFACE_DESC_SIZE	0
+ #endif
+ 
+-#define CONFIG_DESC_SIZE		MULTITOUCH_INTERFACE_DESC_POS+MULTITOUCH_INTERFACE_DESC_SIZE
++#define DS4_INTERFACE_DESC_POS	MULTITOUCH_INTERFACE_DESC_POS+MULTITOUCH_INTERFACE_DESC_SIZE
++#ifdef  DS4_INTERFACE
++#define DS4_INTERFACE_DESC_SIZE	9+9+7+7
++#define DS4_HID_DESC_OFFSET		DS4_INTERFACE_DESC_POS+9
++#else
++#define DS4_INTERFACE_DESC_SIZE	0
++#endif
++
++#define CONFIG_DESC_SIZE		DS4_INTERFACE_DESC_POS+DS4_INTERFACE_DESC_SIZE
+ 
+ 
+ 
+@@ -1243,6 +1335,42 @@ static uint8_t config_descriptor[CONFIG_
+         MULTITOUCH_SIZE, 0,                     // wMaxPacketSize
+         1,                                      // bInterval
+ #endif // KEYMEDIA_INTERFACE
++
++#ifdef DS4_INTERFACE
++        // interface descriptor, USB spec 9.6.5, page 267-269, Table 9-12
++        9,                                      // bLength
++        4,                                      // bDescriptorType
++        DS4_INTERFACE,                          // bInterfaceNumber
++        0,                                      // bAlternateSetting
++        2,                                      // bNumEndpoints
++        0x03,                                   // bInterfaceClass (0x03 = HID)
++        0x00,                                   // bInterfaceSubClass
++        0x00,                                   // bInterfaceProtocol
++        0,                                      // iInterface
++        // HID interface descriptor, HID 1.11 spec, section 6.2.1
++        9,                                      // bLength
++        0x21,                                   // bDescriptorType
++        0x11, 0x01,                             // bcdHID
++        0,                                      // bCountryCode
++        1,                                      // bNumDescriptors
++        0x22,                                   // bDescriptorType
++        LSB(sizeof(ds4_report_desc)),           // wDescriptorLength
++        MSB(sizeof(ds4_report_desc)),
++        // endpoint descriptor, USB spec 9.6.6, page 269-271, Table 9-13
++        7,                                      // bLength
++        5,                                      // bDescriptorType
++        DS4_TX_ENDPOINT | 0x80,                 // bEndpointAddress
++        0x03,                                   // bmAttributes (0x03=intr)
++        DS4_TX_SIZE, 0,                         // wMaxPacketSize
++        DS4_TX_INTERVAL,                        // bInterval
++        // endpoint descriptor, USB spec 9.6.6, page 269-271, Table 9-13
++        7,                                      // bLength
++        5,                                      // bDescriptorType
++        DS4_RX_ENDPOINT,                        // bEndpointAddress
++        0x03,                                   // bmAttributes (0x03=intr)
++        DS4_RX_SIZE, 0,                         // wMaxPacketSize
++        DS4_RX_INTERVAL,			// bInterval
++#endif // DS4_INTERFACE
+ };
+ 
+ 
+@@ -1378,6 +1506,10 @@ const usb_descriptor_list_t usb_descript
+ #ifdef MTP_INTERFACE
+ 	{0x0304, 0x0409, (const uint8_t *)&usb_string_mtp, 0},
+ #endif
++#ifdef DS4_INTERFACE
++	{0x2200, DS4_INTERFACE, ds4_report_desc, sizeof(ds4_report_desc)},
++	{0x2100, DS4_INTERFACE, config_descriptor+DS4_HID_DESC_OFFSET, 9},
++#endif
+         {0x0300, 0x0000, (const uint8_t *)&string0, 0},
+         {0x0301, 0x0409, (const uint8_t *)&usb_string_manufacturer_name, 0},
+         {0x0302, 0x0409, (const uint8_t *)&usb_string_product_name, 0},
+diff -Npur framework-arduinoteensy/cores/teensy3/usb_desc.h framework-arduinoteensy-ds4/cores/teensy3/usb_desc.h
+--- framework-arduinoteensy/cores/teensy3/usb_desc.h	2017-11-09 19:16:45.000000000 -0400
++++ framework-arduinoteensy-ds4/cores/teensy3/usb_desc.h	2018-01-29 22:25:51.283644771 -0400
+@@ -690,6 +690,39 @@ let me know?  http://forum.pjrc.com/foru
+   #define ENDPOINT14_CONFIG	ENDPOINT_TRANSMIT_ISOCHRONOUS
+   #define ENDPOINT15_CONFIG	ENDPOINT_TRANSIMIT_ONLY
+ 
++#elif defined(USB_DS4)
++  #define VENDOR_ID		0x16C0
++  // Looks like a unused PID within the 0474-04d7 range
++  // See https://www.voti.nl/pids/
++  // Also the little endian representation of it is D504 -> DS04 -> DS4
++  #define PRODUCT_ID		0x04D5
++  #define MANUFACTURER_NAME	{'T','e','e','n','s','y','d','u','i','n','o'}
++  #define MANUFACTURER_NAME_LEN	11
++  #define PRODUCT_NAME		{'T','e','e','n','s','y',' ','D','S','4'}
++  #define PRODUCT_NAME_LEN	10
++  #define EP0_SIZE		64
++  #define NUM_ENDPOINTS         4
++  #define NUM_USB_BUFFERS	12
++  #define NUM_INTERFACE		1
++  #define DS4_INTERFACE      0	// DS4
++  #define DS4_TX_ENDPOINT    4
++  #define DS4_TX_SIZE        64
++  #define DS4_TX_INTERVAL    5
++  #define DS4_RX_ENDPOINT    3
++  #define DS4_RX_SIZE        64
++  #define DS4_RX_INTERVAL    5
++  #define SEREMU_INTERFACE      1	// Serial emulation
++  #define SEREMU_TX_ENDPOINT    1
++  #define SEREMU_TX_SIZE        64
++  #define SEREMU_TX_INTERVAL    1
++  #define SEREMU_RX_ENDPOINT    2
++  #define SEREMU_RX_SIZE        32
++  #define SEREMU_RX_INTERVAL    2
++  #define ENDPOINT1_CONFIG	ENDPOINT_TRANSIMIT_ONLY
++  #define ENDPOINT2_CONFIG	ENDPOINT_RECEIVE_ONLY
++  #define ENDPOINT3_CONFIG	ENDPOINT_RECEIVE_ONLY
++  #define ENDPOINT4_CONFIG	ENDPOINT_TRANSIMIT_ONLY
++
+ #endif
+ 
+ #ifdef USB_DESC_LIST_DEFINE
+diff -Npur framework-arduinoteensy/cores/teensy3/usb_dev.c framework-arduinoteensy-ds4/cores/teensy3/usb_dev.c
+--- framework-arduinoteensy/cores/teensy3/usb_dev.c	2017-11-09 19:16:45.000000000 -0400
++++ framework-arduinoteensy-ds4/cores/teensy3/usb_dev.c	2018-01-14 16:20:26.971894958 -0400
+@@ -41,7 +41,7 @@
+ #if F_CPU >= 20000000 && defined(NUM_ENDPOINTS)
+ 
+ #include "kinetis.h"
+-//#include "HardwareSerial.h"
++#include "HardwareSerial.h"
+ #include "usb_mem.h"
+ #include <string.h> // for memset
+ 
+@@ -177,7 +177,7 @@ static void usb_setup(void)
+ 	  case 0x0500: // SET_ADDRESS
+ 		break;
+ 	  case 0x0900: // SET_CONFIGURATION
+-		//serial_print("configure\n");
++		serial_print("configure\n");
+ 		usb_configuration = setup.wValue;
+ 		reg = &USB0_ENDPT1;
+ 		cfg = usb_endpoint_config_table;
+@@ -261,6 +261,7 @@ static void usb_setup(void)
+ 			}
+ #endif
+ 		}
++		//serial_print("configure done\n");
+ 		break;
+ 	  case 0x0880: // GET_CONFIGURATION
+ 		reply_buffer[0] = usb_configuration;
+@@ -379,12 +380,34 @@ static void usb_setup(void)
+ #endif
+ 
+ // TODO: this does not work... why?
+-#if defined(SEREMU_INTERFACE) || defined(KEYBOARD_INTERFACE)
++#if defined(SEREMU_INTERFACE) || defined(KEYBOARD_INTERFACE) || defined(DS4_INTERFACE)
+ 	  case 0x0921: // HID SET_REPORT
+-		//serial_print(":)\n");
+-		return;
++		serial_print(":)\n");
++#if defined(DS4_INTERFACE)
++        // DS4: set feature report 0xf0 (setChallenge)
++		if (setup.wValue != 0x03f0) {
++			// reject everything that we don't know, leave the rest to usb_control()
++			serial_print("E: unknown feature report");
++			serial_phex16(setup.wValue);
++			serial_print("\n");
++			endpoint0_stall();
++		}
++#endif
++		break;
+ 	  case 0x0A21: // HID SET_IDLE
+ 		break;
++	  case 0x01A1: // HID GET_REPORT
++#if defined(DS4_INTERFACE)
++		// DS4: get feature report 0xf1, 0xf2 (getChallengeResponse, challengeResponseAvailable)
++		if (!usb_ds4_on_get_report(&setup, usb_ds4_reply_buffer, &datalen)) {
++			data = usb_ds4_reply_buffer;
++		} else {
++			endpoint0_stall();
++			return;
++		}
++#endif
++		break;
++
+ 	  // case 0xC940:
+ #endif
+ 
+@@ -525,17 +548,17 @@ static void usb_control(uint32_t stat)
+ 
+ 	b = stat2bufferdescriptor(stat);
+ 	pid = BDT_PID(b->desc);
+-	//count = b->desc >> 16;
++	uint32_t count = b->desc >> 16;
+ 	buf = b->addr;
+-	//serial_print("pid:");
+-	//serial_phex(pid);
+-	//serial_print(", count:");
+-	//serial_phex(count);
+-	//serial_print("\n");
++	serial_print("pid:");
++	serial_phex(pid);
++	serial_print(", count:");
++	serial_phex(count);
++	serial_print("\n");
+ 
+ 	switch (pid) {
+ 	case 0x0D: // Setup received from host
+-		//serial_print("PID=Setup\n");
++		serial_print("PID=Setup\n");
+ 		//if (count != 8) ; // panic?
+ 		// grab the 8 byte setup info
+ 		setup.word1 = *(uint32_t *)(buf);
+@@ -561,7 +584,7 @@ static void usb_control(uint32_t stat)
+ 		// first IN after Setup is always DATA1
+ 		ep0_tx_data_toggle = 1;
+ 
+-#if 0
++//#if 0
+ 		serial_print("bmRequestType:");
+ 		serial_phex(setup.bmRequestType);
+ 		serial_print(", bRequest:");
+@@ -573,15 +596,18 @@ static void usb_control(uint32_t stat)
+ 		serial_print(", len:");
+ 		serial_phex16(setup.wLength);
+ 		serial_print("\n");
+-#endif
++//#endif
+ 		// actually "do" the setup request
+ 		usb_setup();
+ 		// unfreeze the USB, now that we're ready
+ 		USB0_CTL = USB_CTL_USBENSOFEN; // clear TXSUSPENDTOKENBUSY bit
+ 		break;
+ 	case 0x01:  // OUT transaction received from host
+-	case 0x02:
+-		//serial_print("PID=OUT\n");
++	case 0x02:  // ACK
++		serial_print("PID=OUT\n");
++		serial_print("setup.wRequestAndType=");
++		serial_phex16(setup.wRequestAndType);
++		serial_print("\n");
+ #ifdef CDC_STATUS_INTERFACE
+ 		if (setup.wRequestAndType == 0x2021 /*CDC_SET_LINE_CODING*/) {
+ 			int i;
+@@ -615,14 +641,23 @@ static void usb_control(uint32_t stat)
+ 			endpoint0_transmit(NULL, 0);
+ 		}
+ #endif
++#ifdef DS4_INTERFACE
++	    // Don't send 0 len packet as a mean of ack
++	    //if (setup.wRequestAndType == 0x0921 && !usb_ds4_on_set_report(&setup, buf)) {
++	    //	//endpoint0_transmit(NULL, 0);
++	    //}
++	    if (setup.wRequestAndType == 0x0921) {
++	    	usb_ds4_on_set_report(&setup, buf);
++	    }
++#endif
+ 		// give the buffer back
+ 		b->desc = BDT_DESC(EP0_SIZE, DATA1);
+ 		break;
+ 
+ 	case 0x09: // IN transaction completed to host
+-		//serial_print("PID=IN:");
+-		//serial_phex(stat);
+-		//serial_print("\n");
++		serial_print("PID=IN:");
++		serial_phex(stat);
++		serial_print("\n");
+ 
+ 		// send remaining data, if any...
+ 		data = ep0_tx_ptr;
+@@ -988,18 +1023,18 @@ void usb_isr(void)
+ 					packet->index = 0;
+ 					packet->next = NULL;
+ 					if (rx_first[endpoint] == NULL) {
+-						//serial_print("rx 1st, epidx=");
+-						//serial_phex(endpoint);
+-						//serial_print(", packet=");
+-						//serial_phex32((uint32_t)packet);
+-						//serial_print("\n");
++						serial_print("rx 1st, epidx=");
++						serial_phex(endpoint);
++						serial_print(", packet=");
++						serial_phex32((uint32_t)packet);
++						serial_print("\n");
+ 						rx_first[endpoint] = packet;
+ 					} else {
+-						//serial_print("rx Nth, epidx=");
+-						//serial_phex(endpoint);
+-						//serial_print(", packet=");
+-						//serial_phex32((uint32_t)packet);
+-						//serial_print("\n");
++						serial_print("rx Nth, epidx=");
++						serial_phex(endpoint);
++						serial_print(", packet=");
++						serial_phex32((uint32_t)packet);
++						serial_print("\n");
+ 						rx_last[endpoint]->next = packet;
+ 					}
+ 					rx_last[endpoint] = packet;
+@@ -1014,8 +1049,8 @@ void usb_isr(void)
+ 						b->desc = BDT_DESC(64,
+ 							((uint32_t)b & 8) ? DATA1 : DATA0);
+ 					} else {
+-						//serial_print("starving ");
+-						//serial_phex(endpoint + 1);
++						serial_print("starving ");
++						serial_phex(endpoint + 1);
+ 						b->desc = 0;
+ 						usb_rx_memory_needed++;
+ 					}
+diff -Npur framework-arduinoteensy/cores/teensy3/usb_dev.h framework-arduinoteensy-ds4/cores/teensy3/usb_dev.h
+--- framework-arduinoteensy/cores/teensy3/usb_dev.h	2017-11-09 19:16:45.000000000 -0400
++++ framework-arduinoteensy-ds4/cores/teensy3/usb_dev.h	2018-01-29 22:24:18.594279322 -0400
+@@ -114,6 +114,11 @@ extern int usb_audio_set_feature(void *s
+ extern void usb_touchscreen_update_callback(void);
+ #endif
+ 
++#ifdef DS4_INTERFACE
++extern uint8_t usb_ds4_reply_buffer[];
++extern int usb_ds4_on_set_report(void *setup_ptr, uint8_t *data);
++extern int usb_ds4_on_get_report(void *setup_ptr, uint8_t *data, uint32_t *len);
++#endif
+ 
+ #ifdef __cplusplus
+ }
+diff -Npur framework-arduinoteensy/cores/teensy3/usb_ds4.cpp framework-arduinoteensy-ds4/cores/teensy3/usb_ds4.cpp
+--- framework-arduinoteensy/cores/teensy3/usb_ds4.cpp	1969-12-31 20:00:00.000000000 -0400
++++ framework-arduinoteensy-ds4/cores/teensy3/usb_ds4.cpp	2018-01-17 17:15:25.763297760 -0400
+@@ -0,0 +1,301 @@
++/* Teensyduino Core Library
++ * http://www.pjrc.com/teensy/
++ * Copyright (c) 2017 PJRC.COM, LLC.
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining
++ * a copy of this software and associated documentation files (the
++ * "Software"), to deal in the Software without restriction, including
++ * without limitation the rights to use, copy, modify, merge, publish,
++ * distribute, sublicense, and/or sell copies of the Software, and to
++ * permit persons to whom the Software is furnished to do so, subject to
++ * the following conditions:
++ *
++ * 1. The above copyright notice and this permission notice shall be
++ * included in all copies or substantial portions of the Software.
++ *
++ * 2. If the Software is incorporated into a build system that allows
++ * selection among a list of target devices, then similar target
++ * devices manufactured by PJRC.COM must be included in the list of
++ * target devices and selectable in the same manner.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
++ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
++ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
++ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
++ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
++ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
++ * SOFTWARE.
++ */
++
++#include "usb_dev.h"
++#include "usb_ds4.h"
++#include "core_pins.h" // for yield()
++#include "HardwareSerial.h"
++#include <string.h> // for memcpy()
++
++#ifdef DS4_INTERFACE
++#if F_CPU >= 20000000
++
++#define TX_PACKET_LIMIT 4
++
++#ifndef DS4_PACKET_TIMEOUT
++#define DS4_PACKET_TIMEOUT 1000
++#endif
++
++// Ripped from GIMX HoriPad emulation firmware
++static const uint8_t replay_report_0x03[] = {
++    0x03, 0x21, 0x27, 0x04, 0x41, 0x00, 0x2c, 0x56,
++    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++    0x00, 0x00, 0x0d, 0x0d, 0x00, 0x00, 0x00, 0x00,
++    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
++};
++
++static const uint8_t replay_report_0xf3[] = {
++    0xf3, 0x00, 0x38, 0x38, 0x00, 0x00, 0x00, 0x00
++};
++
++// Used by usb_dev as a extended buffer
++uint8_t usb_ds4_reply_buffer[64];
++
++void usb_ds4_report_init(ds4_report_t *report) {
++    memset(report, 0, sizeof(ds4_report_t));
++    report->type = 0x01;
++    // Center the D-Pad
++    DS4_DPAD_SET(report->buttons, DS4_DPAD_C);
++    // Analog sticks
++    report->analog_l_x = 0x80;
++    report->analog_l_y = 0x80;
++    report->analog_r_x = 0x80;
++    report->analog_r_y = 0x80;
++    // Ext
++    report->state_ext = DS4_EXT_NULL;
++    // Touch
++    for (uint8_t i=0; i<3; i++) {
++        report->frames[i].pos1 = DS4_TOUCH_POS_PACK(0, 0, 0, 0);
++        report->frames[i].pos2 = DS4_TOUCH_POS_PACK(0, 0, 0, 0);
++    }
++    report->battery = 0xff;
++    report->gyro_x = 0xffe7;
++    report->gyro_y = 0x206e;
++    report->gyro_z = 0x09d9;
++    //report->padding[1] = 0x80;
++}
++
++#ifdef USB_DS4_AUTH_RELAY
++static const ds4_auth_cbt_t *ds4_auth_cbt = NULL;
++
++void usb_ds4_set_cbt(const ds4_auth_cbt_t *cbt) {
++    ds4_auth_cbt = cbt;
++}
++
++static inline bool cbt_sanity_check() {
++    serial_print("I: sanity\n");
++    if (!ds4_auth_cbt) {
++        serial_print("F: Auth CBT not set\n");
++        return false;
++    }
++    return true;
++}
++
++#endif
++
++struct setup_struct {
++  union {
++   struct {
++	uint8_t bmRequestType;
++	uint8_t bRequest;
++   };
++	uint16_t wRequestAndType;
++  };
++	uint16_t wValue;
++	uint16_t wIndex;
++	uint16_t wLength;
++};
++
++int usb_ds4_on_get_report(void *setup_ptr, uint8_t *data, uint32_t *len) {
++    struct setup_struct setup = *((struct setup_struct *)setup_ptr);
++    switch (setup.wValue) {
++#if defined(USB_DS4_AUTH_RELAY)
++        case 0x03f1: // getChallengeResponse
++            serial_print("I: getChallengeResponse\n");
++            if (!cbt_sanity_check()) return 1;
++            if (ds4_auth_cbt->on_get_challenge_response((ds4_auth_t *) data)) {
++                *len = sizeof(ds4_auth_t);
++            } else {
++                serial_print("E: Callback 03f1 failed\n");
++                return 1;
++            }
++            break;
++        case 0x03f2: // challengeResponseAvailable
++            serial_print("I: challengeResponseAvailable\n");
++            if (!cbt_sanity_check()) return 1;
++            if (ds4_auth_cbt->on_challenge_response_available((ds4_auth_result_t *) data)) {
++                *len = sizeof(ds4_auth_result_t);
++            } else {
++                serial_print("E: Callback 03f2 failed\n");
++                return 1;
++            }
++            break;
++#endif
++        case 0x0303: // horiReport0x03
++            serial_print("I: horiReport0x03\n");
++            memcpy(data, replay_report_0x03, sizeof(replay_report_0x03));
++            *len = sizeof(replay_report_0x03);
++            break;
++        case 0x03f3: // horiReport0xf3
++            serial_print("I: horiReport0xf3\n");
++            memcpy(data, replay_report_0xf3, sizeof(replay_report_0xf3));
++            *len = sizeof(replay_report_0xf3);
++            break;
++        default:
++            serial_print("W: Unknown get_report ");
++            serial_phex16(setup.wValue);
++            serial_print("\n");
++            return 1;
++    }
++    serial_print("I: Get report OK\n");
++    return 0;
++}
++
++int usb_ds4_on_set_report(void *setup_ptr, uint8_t *data) {
++    struct setup_struct setup = *((struct setup_struct *)setup_ptr);
++#if defined(USB_DS4_AUTH_RELAY)
++    ds4_auth_t *authbuf = (ds4_auth_t *) data;
++#endif
++    switch (setup.wValue) {
++#if defined(USB_DS4_AUTH_RELAY)
++        case 0x03f0: // setChallenge
++            serial_print("I: setChallenge\n");
++            if (!cbt_sanity_check()) return 1;
++            if (setup.wLength != sizeof(ds4_auth_t)) {
++                serial_print("E: Packet len mismatch (");
++                serial_phex16(sizeof(ds4_auth_t));
++                serial_print(" != ");
++                serial_phex16(setup.wLength);
++                serial_print(")\n");
++                return 1;
++            } else if (authbuf->type != 0xf0) { // magic check
++                serial_print("E: Invalid magic (0xf0 != ");
++                serial_phex16(authbuf->type);
++                serial_print(")\n");
++                return 1;
++            } else {
++                if (!ds4_auth_cbt->on_set_challenge(authbuf)) {
++                    serial_print("E: Callback 03f0 failed\n");
++                    return 1;
++                }
++            }
++            break;
++#endif
++        default:
++            serial_print("W: Unknown set_report ");
++            serial_phex16(setup.wValue);
++            serial_print("\n");
++            return 1;
++    }
++    serial_print("I: Set report OK\n");
++    return 0;
++}
++
++// Ported from usb_rawhid.c
++static int usb_ds4_recv(void *buffer, uint32_t timeout)
++{
++	usb_packet_t *rx_packet;
++	uint32_t begin = millis();
++
++	while (1) {
++		if (!usb_configuration) return -1;
++		rx_packet = usb_rx(DS4_RX_ENDPOINT);
++		if (rx_packet) break;
++		if (millis() - begin > timeout || !timeout) return 0;
++		yield();
++	}
++	memcpy(buffer, rx_packet->buf, DS4_RX_SIZE);
++	usb_free(rx_packet);
++	return DS4_RX_SIZE;
++}
++
++static int usb_ds4_available(void)
++{
++	uint32_t count;
++
++	if (!usb_configuration) return 0;
++	count = usb_rx_byte_count(DS4_RX_ENDPOINT);
++	return count;
++}
++
++static int usb_ds4_send(const void *buffer, uint16_t len, uint32_t timeout) {
++	usb_packet_t *tx_packet;
++	uint32_t begin = millis();
++
++	while (1) {
++		if (!usb_configuration) return -1;
++		if (usb_tx_packet_count(DS4_TX_ENDPOINT) < TX_PACKET_LIMIT) {
++			tx_packet = usb_malloc();
++			if (tx_packet) break;
++		}
++		if (millis() - begin > timeout) {
++		    serial_print("send: timeout\n");
++		    return 0;
++		}
++		yield();
++	}
++	memcpy(tx_packet->buf, buffer, len);
++	tx_packet->len = len;
++	usb_tx(DS4_TX_ENDPOINT, tx_packet);
++	//serial_print("send: enqueued len=");
++	//serial_phex16(len);
++	//serial_print("\n");
++	return len;
++}
++
++int usb_ds4_send_report(const ds4_report_t *report) {
++    int result = usb_ds4_send((const void *) report, sizeof(ds4_report_t), DS4_PACKET_TIMEOUT);
++    if (result == sizeof(ds4_report_t)) {
++        return 0;
++    } else if (result == -1) {
++        return -1;
++    } else {
++        return 1;
++    }
++}
++
++int usb_ds4_recv_feedback(ds4_feedback_t *feedback) {
++    int available = usb_ds4_available();
++    uint8_t recv_buffer[DS4_RX_SIZE];
++    if (available != 0) {
++        serial_phex32(available);
++        serial_print("\n");
++    }
++    if (available >= (int) sizeof(ds4_feedback_t)) {
++        int result = usb_ds4_recv((void *) &recv_buffer, DS4_PACKET_TIMEOUT);
++        if (result > 0) {
++            if (recv_buffer[0] == 0x05) {
++                serial_print("I: report ok\n");
++                memcpy((void *) feedback, (const void *) recv_buffer, sizeof(ds4_feedback_t));
++            } else {
++                serial_print("E: unknown OUT report");
++                serial_phex(recv_buffer[0]);
++                serial_print("\n");
++                return 1;
++            }
++        } else if (result == 0) {
++            serial_print("recv: timeout\n");
++            return 1;
++        }
++    } else {
++        if (available > 0) {
++            serial_print("W: recv: underflow len=");
++            serial_phex32(available);
++            serial_print("\n");
++            return 1;
++        }
++    }
++    return 0;
++}
++
++#endif // F_CPU >= 20000000
++#endif // DS4_INTERFACE
+diff -Npur framework-arduinoteensy/cores/teensy3/usb_ds4.h framework-arduinoteensy-ds4/cores/teensy3/usb_ds4.h
+--- framework-arduinoteensy/cores/teensy3/usb_ds4.h	1969-12-31 20:00:00.000000000 -0400
++++ framework-arduinoteensy-ds4/cores/teensy3/usb_ds4.h	2018-01-17 15:09:28.158825225 -0400
+@@ -0,0 +1,248 @@
++/* Teensyduino Core Library
++ * http://www.pjrc.com/teensy/
++ * Copyright (c) 2017 PJRC.COM, LLC.
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining
++ * a copy of this software and associated documentation files (the
++ * "Software"), to deal in the Software without restriction, including
++ * without limitation the rights to use, copy, modify, merge, publish,
++ * distribute, sublicense, and/or sell copies of the Software, and to
++ * permit persons to whom the Software is furnished to do so, subject to
++ * the following conditions:
++ *
++ * 1. The above copyright notice and this permission notice shall be
++ * included in all copies or substantial portions of the Software.
++ *
++ * 2. If the Software is incorporated into a build system that allows
++ * selection among a list of target devices, then similar target
++ * devices manufactured by PJRC.COM must be included in the list of
++ * target devices and selectable in the same manner.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
++ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
++ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
++ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
++ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
++ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
++ * SOFTWARE.
++ */
++
++#ifndef __USB_DS4_H__
++#define __USB_DS4_H__
++
++#include "usb_desc.h"
++
++#ifdef DS4_INTERFACE
++
++#include <inttypes.h>
++#include <string.h>
++#include <HardwareSerial.h>
++#include <core_pins.h> // for millis()
++
++// D-Pad positions
++#define DS4_DPAD_N 0
++#define DS4_DPAD_NE 1
++#define DS4_DPAD_E 2
++#define DS4_DPAD_SE 3
++#define DS4_DPAD_S 4
++#define DS4_DPAD_SW 5
++#define DS4_DPAD_W 6
++#define DS4_DPAD_NW 7
++#define DS4_DPAD_C 8
++
++// Buttons
++#define DS4_BTN_SQUARE 4
++#define DS4_BTN_CROSS 5
++#define DS4_BTN_CIRCLE 6
++#define DS4_BTN_TRIANGLE 7
++#define DS4_BTN_L1 8
++#define DS4_BTN_R1 9
++#define DS4_BTN_L2 10
++#define DS4_BTN_R2 11
++#define DS4_BTN_SHARE 12
++#define DS4_BTN_OPTION 13
++#define DS4_BTN_L3 14
++#define DS4_BTN_R3 15
++#define DS4_BTN_PS 16
++#define DS4_BTN_TOUCH 17
++
++// ext
++//#define DS4_EXT_NULL 0x1b
++#define DS4_EXT_NULL 0x08
++
++#ifdef USB_DS4_AUTH_RELAY
++// TODO: verify
++typedef struct {
++    uint8_t type; // 0
++    uint8_t seq; // 1
++    uint8_t page; // 2
++    uint8_t sbz; // 3
++    uint8_t data[56]; // 4-59
++    uint32_t crc32; // 60-63
++} __attribute__((packed)) ds4_auth_t;
++
++// TODO: verify
++typedef struct {
++    uint8_t type; // 0
++    uint8_t seq; // 1
++    uint8_t status; // 2  0x10 = not ready, 0x00 = ready
++    uint8_t padding[9]; // 3-11
++    uint32_t crc32; // 12-15
++} __attribute__((packed)) ds4_auth_result_t;
++
++// Fuck Arduino design concept, let's use a function table
++typedef struct {
++    bool (*on_set_challenge)(const ds4_auth_t *challenge);
++    bool (*on_challenge_response_available)(ds4_auth_result_t *result);
++    bool (*on_get_challenge_response)(ds4_auth_t *response);
++} __attribute__((packed)) ds4_auth_cbt_t;
++
++#endif // USB_DS4_AUTH_RELAY
++
++typedef struct {
++    uint8_t seq; // 34
++    uint32_t pos1; // 35-38
++    uint32_t pos2; // 39-42
++} __attribute__((packed)) ds4_touch_frame_t;
++
++typedef struct {
++    uint8_t type; // 0
++    uint8_t analog_l_x; // 1
++    uint8_t analog_l_y; // 2
++    uint8_t analog_r_x; // 3
++    uint8_t analog_r_y; // 4
++    uint8_t buttons[3]; // 5-7
++    uint8_t trigger_l; // 8
++    uint8_t trigger_r; // 9
++    uint16_t sensor_timestamp; // 10-11
++    uint8_t battery; // 12
++    uint8_t u13; // 13
++    int16_t accel_z; // 14-15
++    int16_t accel_y; // 16-17
++    int16_t accel_x; // 18-19
++    int16_t gyro_x; // 20-21
++    int16_t gyro_y; // 22-23
++    int16_t gyro_z; // 24-25
++    uint32_t u26; // 26-29
++    uint8_t state_ext; // 30
++    uint16_t u31; // 31-32
++    uint8_t tp_available_frame; // 33
++    ds4_touch_frame_t frames[3]; // 34-60
++    uint8_t padding[3]; // 61-62 (63?)
++} __attribute__((packed)) ds4_report_t;
++
++typedef struct {
++    uint8_t type; // 0
++    uint8_t flags; // 1
++    uint8_t padding1[2]; // 2-3
++    uint8_t rumble_right; // 4
++    uint8_t rumble_left; // 5
++    uint8_t led_color[3]; // 6-8
++    uint8_t led_flash_on; // 9
++    uint8_t led_flash_off; // 10
++    uint8_t padding[20]; // 11-30
++} __attribute__((packed)) ds4_feedback_t;
++
++#define DS4_DPAD_SET(buttons, dir) \
++    buttons[0] ^= buttons[0] & 0x0f; \
++    buttons[0] |= dir & 0x0f;
++
++#define DS4_GET_SENSOR_TS() ((millis() * 150) & 0xffff)
++
++#define DS4_BTN_SET(buttons, btn_id) \
++    buttons[(btn_id >> 3) & 3] |= 1 << (btn_id & 7);
++
++#define DS4_BTN_CLR(buttons, btn_id) \
++    buttons[(btn_id >> 3) & 3] &= ~(1 << (btn_id & 7));
++
++#define DS4_BTN_RESET(buttons) \
++    buttons[0] ^= buttons[0] & 0xf0; \
++    buttons[1] ^= buttons[1] & 0xff; \
++    buttons[2] ^= buttons[2] & 0x03;
++
++#define DS4_BTN_CTR_INC(buttons) buttons[2] += 4;
++#define DS4_BTN_CTR_RESET(buttons) buttons[2] ^= buttons[2] & 0xfc;
++
++// Format: yyyyyyyyyyyyxxxxxxxxxxxxtiiiiiii
++#define DS4_TOUCH_POS_UNPACK(tp) \
++    ((~(tp >> 7)) & 1), (tp & 0x7f), ((tp >> 8) & 0xfff), ((tp >> 20) & 0xfff)
++#define DS4_TOUCH_POS_PACK(touch, track_id, x, y) \
++    ((y & 0xfff) << 20) | ((x & 0xfff) << 8) | (((~touch) & 1) << 7) | (track_id & 0x7f)
++
++// C language implementation
++#ifdef __cplusplus
++extern "C" {
++#endif
++
++// buffers
++extern uint8_t usb_ds4_reply_buffer[];
++//extern ds4_report_t usb_ds4_report_buffer;
++
++// C function prototypes
++extern int usb_ds4_send_report(const ds4_report_t *report);
++extern int usb_ds4_recv_feedback(ds4_feedback_t *feedback);
++
++extern int usb_ds4_on_set_report(void *setup_ptr, uint8_t *data);
++extern int usb_ds4_on_get_report(void *setup_ptr, uint8_t *data, uint32_t *len);
++
++#ifdef USB_DS4_AUTH_RELAY
++extern void usb_ds4_set_cbt(const ds4_auth_cbt_t *cbt);
++#endif
++
++extern void usb_ds4_report_init(ds4_report_t *report);
++
++#ifdef __cplusplus
++}
++#endif
++
++// C++ interface
++#ifdef __cplusplus
++class usb_ds4_class {
++// C++ function prototypes
++
++public:
++    usb_ds4_class(void) { return; } // initialize procedure will be handled in begin()
++    void begin(void) {
++        usb_ds4_report_init(&reportBuffer);
++        memset(&feedbackBuffer, 0, sizeof(ds4_feedback_t));
++    }
++    void send(void) {
++        reportBuffer.sensor_timestamp = DS4_GET_SENSOR_TS();
++        usb_ds4_send_report(&reportBuffer);
++        DS4_BTN_CTR_INC(reportBuffer.buttons);
++    }
++    void update(void) {
++        usb_ds4_recv_feedback(&feedbackBuffer);
++    }
++    void pressButton(int buttonId) {
++        DS4_BTN_SET(reportBuffer.buttons, buttonId);
++    }
++    void releaseButton(int buttonId) {
++        DS4_BTN_CLR(reportBuffer.buttons, buttonId);
++    }
++    void releaseAllButton(void) {
++        DS4_BTN_RESET(reportBuffer.buttons);
++    }
++    void pressDpad(int pos) {
++        DS4_DPAD_SET(reportBuffer.buttons, pos);
++        //serial_print("buttons: ");
++        //serial_phex(reportBuffer.buttons[0]);
++        //serial_phex(reportBuffer.buttons[1]);
++        //serial_phex(reportBuffer.buttons[2]);
++        //serial_print("\n");
++    }
++    void releaseDpad(void) {
++        DS4_DPAD_SET(reportBuffer.buttons, DS4_DPAD_C);
++    }
++private:
++    ds4_report_t reportBuffer;
++    ds4_feedback_t feedbackBuffer;
++};
++
++extern usb_ds4_class DS4;
++
++#endif // __cplusplus
++
++#endif /* DS4_INTERFACE */
++#endif /* __USB_DS4_H__ */
+diff -Npur framework-arduinoteensy/cores/teensy3/usb_inst.cpp framework-arduinoteensy-ds4/cores/teensy3/usb_inst.cpp
+--- framework-arduinoteensy/cores/teensy3/usb_inst.cpp	2017-11-09 19:16:45.000000000 -0400
++++ framework-arduinoteensy-ds4/cores/teensy3/usb_inst.cpp	2018-01-17 17:41:46.595729134 -0400
+@@ -68,6 +68,10 @@ usb_joystick_class Joystick;
+ uint8_t usb_joystick_class::manual_mode = 0;
+ #endif
+ 
++#ifdef DS4_INTERFACE
++usb_ds4_class DS4;
++#endif
++
+ #ifdef USB_DISABLED
+ usb_serial_class Serial;
+ #endif
+diff -Npur framework-arduinoteensy/cores/teensy3/usb_undef.h framework-arduinoteensy-ds4/cores/teensy3/usb_undef.h
+--- framework-arduinoteensy/cores/teensy3/usb_undef.h	2017-11-09 19:16:45.000000000 -0400
++++ framework-arduinoteensy-ds4/cores/teensy3/usb_undef.h	2018-01-13 22:01:32.003422975 -0400
+@@ -239,6 +239,27 @@
+ #ifdef MTP_EVENT_INTERVAL
+ #undef MTP_EVENT_INTERVAL
+ #endif
++#ifdef DS4_INTERFACE
++#undef DS4_INTERFACE
++#endif
++#ifdef DS4_TX_ENDPOINT
++#undef DS4_TX_ENDPOINT
++#endif
++#ifdef DS4_TX_SIZE
++#undef DS4_TX_SIZE
++#endif
++#ifdef DS4_TX_INTERVAL
++#undef DS4_TX_INTERVAL
++#endif
++#ifdef DS4_RX_ENDPOINT
++#undef DS4_RX_ENDPOINT
++#endif
++#ifdef DS4_RX_SIZE
++#undef DS4_RX_SIZE
++#endif
++#ifdef DS4_RX_INTERVAL
++#undef DS4_RX_INTERVAL
++#endif
+ #ifdef ENDPOINT1_CONFIG
+ #undef ENDPOINT1_CONFIG
+ #endif
+diff -Npur framework-arduinoteensy/cores/teensy3/WProgram.h framework-arduinoteensy-ds4/cores/teensy3/WProgram.h
+--- framework-arduinoteensy/cores/teensy3/WProgram.h	2017-11-09 19:16:45.000000000 -0400
++++ framework-arduinoteensy-ds4/cores/teensy3/WProgram.h	2018-01-08 20:26:17.960442634 -0400
+@@ -62,6 +62,7 @@
+ #include "usb_mtp.h"
+ #include "usb_audio.h"
+ #include "usb_touch.h"
++#include "usb_ds4.h"
+ #include "usb_undef.h" // do not allow usb_desc.h stuff to leak to user programs
+ 
+ #include "WCharacter.h"
+diff -Npur framework-arduinoteensy/package.json framework-arduinoteensy-ds4/package.json
+--- framework-arduinoteensy/package.json	2017-11-10 16:03:47.000000000 -0400
++++ framework-arduinoteensy-ds4/package.json	2017-12-23 23:27:42.585011958 -0400
+@@ -1,7 +1,7 @@
+ {
+-    "name": "framework-arduinoteensy",
+-    "description": "Arduino Wiring-based Framework (Teensy Core)",
++    "name": "framework-arduinoteensy-ds4",
++    "description": "Arduino Wiring-based Framework (Teensy Core) (Patched with DS4 Emulation Support)",
+     "system": "*",
+     "url": "https://github.com/PaulStoffregen/cores",
+     "version":"1.140.0"
+-}
+\ No newline at end of file
++}
