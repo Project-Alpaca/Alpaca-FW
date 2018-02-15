@@ -1,5 +1,6 @@
 // TODO use own implementation with auth
 //#include "PS4USBAuth.h"
+#include <usbhub.h>
 #include <PS4USB.h>
 
 // Satisfy the IDE, which needs to see the include statment in the ino too.
@@ -9,7 +10,9 @@
 #include <SPI.h>
 
 USB USBH;
+USBHub Hub1(&USBH);
 PS4USB RealDS4(&USBH);
+
 
 bool ds4_cb_on_set_challenge(const ds4_auth_t *challenge) {
     char hexbuf[7];
@@ -132,7 +135,8 @@ void setup() {
         Serial1.println("F: timeout waiting for usbh");
         while (1);
     }
-
+    // Enable power
+    USBH.gpioWr(0x01);
     //pinMode(13, OUTPUT);
     //digitalWrite(13, HIGH);
 }
