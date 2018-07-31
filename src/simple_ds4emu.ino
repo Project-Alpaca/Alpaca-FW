@@ -12,9 +12,9 @@
 #include <ResponsiveAnalogRead.h>
 
 #include "service_menu.h"
-#include "io_config.h"
+#include "common_objs.h"
 #include "settings.h"
-#include "misc_constants.h"
+#include "constants.h"
 
 #define SCAN_INTERVAL 1
 
