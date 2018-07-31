@@ -1,0 +1,14 @@
+--- framework-arduinoteensy/package.json
++++ framework-arduinoteensy-ds4/package.json
+@@ -1,4 +1,4 @@
+ {
+-    "name": "framework-arduinoteensy",
+-    "description": "Arduino Wiring-based Framework (Teensy Core)",
++    "name": "framework-arduinoteensy-ds4",
++    "description": "Arduino Wiring-based Framework (Teensy Core) (Patched with DS4 Emulation Support)",
+     "system": "*",
+
+@@ -7,1 +7,1 @@
+-}
+\ No newline at end of file
++}
