@@ -3,7 +3,7 @@
 #include <EEPROM.h>
 #include <SoftPotMagic.h>
 
-#define SETTINGS_VER 0x0500af05
+#define SETTINGS_VER 0x0600af05
 
 typedef struct {
     uint32_t magic_ver;
@@ -12,6 +12,7 @@ typedef struct {
     uint8_t button_mapping[16];
     uint8_t default_tp_mode;
     bool ds4_passthrough;
+    bool perf_ctr;
     uint32_t crc32;
 } __attribute__((packed)) settings_t;
 

@@ -38,6 +38,7 @@ const MD_Menu::mnuItem_t menu_items[] = {
     {14, "Button Conf...", MD_Menu::MNU_MENU, 12},
     {15, "TP ADC Zero", MD_Menu::MNU_INPUT, 15},
     {16, "DS4 Redir.", MD_Menu::MNU_INPUT, 16},
+    {17, "Show PerfCtr.", MD_Menu::MNU_INPUT, 17},
     {18, "Clear EEPROM", MD_Menu::MNU_INPUT, 18},
     {19, "Reboot...", MD_Menu::MNU_MENU, 11},
 
@@ -59,6 +60,7 @@ const MD_Menu::mnuInput_t menu_actions[] = {
     {13, "Mode", MD_Menu::INP_LIST, handle_list, 4, 0, 0, 0, 0, 0, TP_MODES},
     {15, "Thres.", MD_Menu::INP_INT, handle_int, 4, 0, 0, 1023, 0, 10, nullptr},
     {16, "Y/N", MD_Menu::INP_BOOL, handle_bool, 1, 0, 0, 0, 0, 0, nullptr},
+    {17, "Y/N", MD_Menu::INP_BOOL, handle_bool, 1, 0, 0, 0, 0, 0, nullptr},
     {18, "Clear EEPROM?", MD_Menu::INP_RUN, clear_eeprom_wrapper, 0, 0, 0, 0, 0, 0, nullptr},
     {20, "Restart?", MD_Menu::INP_RUN, reboot_wrapper, 0, 0, 0, 0, 0, 0, nullptr},
     {21, "Reboot to BL?", MD_Menu::INP_RUN, reboot_wrapper, 0, 0, 0, 0, 0, 0, nullptr},
@@ -399,6 +401,14 @@ MD_Menu::value_t *handle_bool(MD_Menu::mnuId_t id, bool get) {
                 menu_buf.value = controller_settings.ds4_passthrough;
             } else {
                 controller_settings.ds4_passthrough = menu_buf.value;
+                settings_save(&controller_settings);
+            }
+            break;
+        case 17:
+            if (get) {
+                menu_buf.value = controller_settings.perf_ctr;
+            } else {
+                controller_settings.perf_ctr = menu_buf.value;
                 settings_save(&controller_settings);
             }
             break;

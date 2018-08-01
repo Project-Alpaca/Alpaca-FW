@@ -16,7 +16,7 @@
 #include "settings.h"
 #include "constants.h"
 
-#define SCAN_INTERVAL 1
+const uint32_t SCAN_INTERVAL = 1;
 
 ds4_auth_result_t tmp_auth_result = {0};
 
@@ -41,7 +41,6 @@ const uint8_t DPAD_MAP[4] = {6, 7, 14, 15}; // ULDR
 uint8_t lamps;
 uint16_t buttons;
 uint8_t tp_mode;
-uint32_t elapsed = 0;
 
 void scan_buttons() {
     uint8_t lamps_new;
@@ -447,21 +446,38 @@ void setup() {
 
 void loop() {
     // Poll the USBH controller
-    //uint32_t perf = 0, perf2 = 0;
-    
+    static uint16_t fps = 0, vps = 0;
+    static uint32_t perf = millis();
+    static uint32_t elapsed = 0;
+
     USBH.Task();
     DS4.update();
     if (millis() - elapsed >= SCAN_INTERVAL) {
-        //perf = micros();
+        elapsed = millis();
         scan_buttons();
         scan_touchpad();
-        //perf2 = micros();
-        //Serial1.println(perf2 - perf);
-        DS4.sendAsync();
-        elapsed = millis();
+        if (controller_settings.perf_ctr) {
+            if (DS4.sendAsync()) {
+                fps++;
+            }
+            vps++;
+        } else {
+            DS4.sendAsync();
+        }
     }
 
     handle_auth();
     handle_tp_mode_switch();
     if (controller_settings.ds4_passthrough) handle_ds4_pass();
+    if (controller_settings.perf_ctr && millis() - perf >= 1000) {
+        perf = millis();
+        LCD.setCursor(0, 0);
+        LCD.print("                ");
+        LCD.setCursor(0, 0);
+        LCD.print(fps);
+        LCD.setCursor(8, 0);
+        LCD.print(vps);
+        fps = 0;
+        vps = 0;
+    }
 }

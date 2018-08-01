@@ -4,8 +4,6 @@
 #include <SoftPotMagic.h>
 #include "settings.h"
 
-const char *HEX_TABLE = "0123456789abcdef";
-
 void settings_init(settings_t *settings) {
     settings->magic_ver = SETTINGS_VER;
     memset(&settings->tp_calib, 0xff, sizeof(calib_t));
@@ -13,6 +11,7 @@ void settings_init(settings_t *settings) {
     settings->tp_gap_ratio = 0.0f;
     memset(&settings->button_mapping, 0x00, 16 * sizeof(uint8_t));
     settings->ds4_passthrough = false;
+    settings->perf_ctr = false;
     settings->crc32 = 0;
 }
 
