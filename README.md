@@ -2,6 +2,18 @@
 
 Teensyduino-based firmware for Project Diva FT Controller project
 
+## Features
+
+- 16 key shift register-based general purpose input (partially remappable, WIP)
+- Shift register-based 8 channel programmable lamp driver/power switch (expandable)
+- Has a built-in UI for controller settings, no need for a PC (for all runtime settings)
+- Up to 1kHz of internal scanning rate (usually holds at ~995Hz), stable 250Hz report output
+- True slider (although it uses resistive sensing and feels different than official)
+- **Immune** to system updates depending on your settings of USB descriptor thanks to the usage of traditional passthrough technique (instead of relying on stolen keys like B***k)
+- Does not use `delay()` unless absolutely necessary
+- Hackable in every sense unlike B***k boards
+- Built with love :P
+
 ## Build
 
 1. Execute patches/auto.sh under patches.
