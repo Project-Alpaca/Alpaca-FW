@@ -1,7 +1,7 @@
 #!/bin/bash
 
 FRAMEWORK_VER='1.141.0'
-PLATFORM_VER='3.3.1'
+PLATFORM_VER='3.3.2'
 
 FRAMEWORK_URL="https://bintray.com/platformio/dl-packages/download_file?file_path=framework-arduinoteensy-${FRAMEWORK_VER}.tar.gz"
 PLATFORM_URL="https://github.com/platformio/platform-teensy/archive/v${PLATFORM_VER}.tar.gz"

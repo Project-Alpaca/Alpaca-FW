@@ -791,8 +791,8 @@ diff -Npur framework-arduinoteensy/cores/teensy3/usb_ds4.cpp framework-arduinote
 +#endif // DS4_INTERFACE
 diff -Npur framework-arduinoteensy/cores/teensy3/usb_ds4.h framework-arduinoteensy-ds4/cores/teensy3/usb_ds4.h
 --- framework-arduinoteensy/cores/teensy3/usb_ds4.h	1969-12-31 20:00:00.000000000 -0400
-+++ framework-arduinoteensy-ds4/cores/teensy3/usb_ds4.h	2018-07-31 00:34:08.472725424 -0300
-@@ -0,0 +1,322 @@
++++ framework-arduinoteensy-ds4/cores/teensy3/usb_ds4.h	2018-07-31 21:09:19.138514408 -0300
+@@ -0,0 +1,324 @@
 +/* Teensyduino Core Library
 + * http://www.pjrc.com/teensy/
 + * Copyright (c) 2017 PJRC.COM, LLC.
@@ -996,17 +996,19 @@ diff -Npur framework-arduinoteensy/cores/teensy3/usb_ds4.h framework-arduinoteen
 +        memset(&feedbackBuffer, 0, sizeof(ds4_feedback_t));
 +        pointCtr = 0;
 +    }
-+    void send(bool async) {
++    bool send(bool async) {
 +        reportBuffer.sensor_timestamp = DS4_GET_SENSOR_TS();
 +        if (usb_ds4_send_report(&reportBuffer, async) == 0) {
 +            DS4_BTN_CTR_INC(reportBuffer.buttons);
++            return true;
 +        }
++        return false;
 +    }
-+    void send(void) {
-+        send(false);
++    bool send(void) {
++        return send(false);
 +    }
-+    void sendAsync(void) {
-+        send(true);
++    bool sendAsync(void) {
++        return send(true);
 +    }
 +    void update(void) {
 +        usb_ds4_recv_feedback(&feedbackBuffer);
