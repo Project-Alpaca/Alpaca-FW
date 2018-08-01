@@ -46,7 +46,7 @@
 }
 */
 
-const SPISettings SPI596 = SPISettings(1000000, MSBFIRST, SPI_MODE0);
-const SPISettings SPI4021 = SPISettings(1000000, MSBFIRST, SPI_MODE0);
+const SPISettings SPI596 = SPISettings(2000000, MSBFIRST, SPI_MODE0);
+const SPISettings SPI4021 = SPISettings(2000000, MSBFIRST, SPI_MODE0);
 
 #include "pin_config.h"
