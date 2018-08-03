@@ -480,15 +480,17 @@ static void service_menu_setup(void) {
     settings_load(&controller_settings);
 
     qei_sw_block = true;
-    disp_control(MD_Menu::DISP_INIT, nullptr);
+
     QEI.write(0);
     SPI.begin();
 
     digitalWrite(BTN_CSL, LOW);
     SPI.beginTransaction(SPI596);
-    SPI.transfer(0x00);
+    SPI.transfer(0xc0);
     digitalWrite(BTN_CSL, HIGH);
     SPI.endTransaction();
+
+    disp_control(MD_Menu::DISP_INIT, nullptr);
 
     reset_qei_sw();
     

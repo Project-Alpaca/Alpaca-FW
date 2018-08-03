@@ -53,7 +53,8 @@ void scan_buttons() {
     SPI.endTransaction();
 
     // saves one SPI transaction if lamp is not updated
-    lamps_new = buttons & 0x0f;
+    // preserve state for lamp 4-7 for now. Maybe make this configurable in the future?
+    lamps_new = (buttons & 0x0f) | (lamps & 0xf0);
     if (lamps_new != lamps) {
         digitalWrite(BTN_CSL, LOW);
         SPI.beginTransaction(SPI596);
@@ -383,10 +384,6 @@ void setup() {
     Serial1.begin(115200);
     Serial1.println("I: Hello");
 
-    LCD.begin(16, 2);
-    LCD.clear();
-    LCD.print("Starting...");
-
     pinMode(QEI_SW, INPUT_PULLUP);
     if (digitalRead(QEI_SW) == LOW) {
         // Jump to service menu
@@ -419,11 +416,10 @@ void setup() {
 
     digitalWrite(BTN_CSL, LOW);
     SPI.beginTransaction(SPI596);
-    SPI.transfer(0x0f);
-    delay(1);
+    SPI.transfer(0xcf);
     digitalWrite(BTN_CSL, HIGH);
     SPI.endTransaction();
-    lamps = 0x0f;
+    lamps = 0xcf;
     buttons = 0xffff;
 
     // Enable power
@@ -435,6 +431,7 @@ void setup() {
 
     tp_mode = controller_settings.default_tp_mode;
 
+    LCD.begin(16, 2);
     LCD.clear();
     LCD.home();
     redraw_tp_mode();
