@@ -1,13 +1,13 @@
 # FT-Controller-FW
 
-Teensyduino-based firmware for Project Diva FT Controller project
+Teensyduino-based firmware for Project Diva Future Tone controller project based on Teensy 3.x/LC
 
 ## Features
 
 - 16 key shift register-based general purpose input (partially remappable, WIP)
 - Shift register-based 8 channel programmable lamp driver/power switch (expandable)
 - Has a built-in UI for controller settings, no need for a PC (for all runtime settings)
-- Up to 1kHz of internal scanning rate (usually holds at ~995Hz), stable 250Hz report output
+- Up to 1kHz of internal scanning rate (usually holds at ~995Hz on a Teensy LC), stable 250Hz report output
 - True slider (although it uses resistive sensing and feels different than official)
 - **Immune** to system updates depending on your settings of USB descriptor thanks to the usage of traditional passthrough technique (instead of relying on stolen keys like B***k)
 - Does not use `delay()` unless absolutely necessary
@@ -24,8 +24,8 @@ cd patches && bash ./auto.sh
 2. Copy `patches/patched/framework-arduinoteensy-ds4` to `package` directory under your PlatformIO settings directory and `patches/patched/teensy-ds4` to `platforms` directory.
 ```shell
 cd patched
-cp framework-arduinoteensy-ds4 /path/to/your/pfio/config/dir/packages
-cp teensy-ds4 /path/to/your/pfio/config/dir/platforms
+cp -r framework-arduinoteensy-ds4 /path/to/your/pfio/config/dir/packages
+cp -r teensy-ds4 /path/to/your/pfio/config/dir/platforms
 ```
 
 3. Run `pio run` at the project root directory.
