@@ -228,8 +228,12 @@ void scan_touchpad(void) {
     }
 
     switch (tp_mode) {
+        case TP_MODE_TP_C:
         case TP_MODE_TP:
             if (pos1 != POS_FLOAT) {
+                if (tp_mode == TP_MODE_TP_C) {
+                    DS4.pressButton(DS4_BTN_TOUCH);
+                }
                 DS4.setTouchPos1(map(pos1, POS_MIN, POS_MAX, 0, 1919), 471);
                 if (pos2 != POS_FLOAT) {
                     DS4.setTouchPos2(map(pos2, POS_MIN, POS_MAX, 0, 1919), 471);
@@ -237,6 +241,9 @@ void scan_touchpad(void) {
                     DS4.releaseTouchPos2();
                 }
             } else {
+                if (tp_mode == TP_MODE_TP_C) {
+                    DS4.releaseButton(DS4_BTN_TOUCH);
+                }
                 DS4.releaseTouchAll();
             }
             break;
@@ -306,6 +313,9 @@ void redraw_tp_mode(void) {
             break;
         case TP_MODE_LR:
             LCD.print(TP_MODE_LR_N);
+            break;
+        case TP_MODE_TP_C:
+            LCD.print(TP_MODE_TP_C_N);
             break;
     }
 }

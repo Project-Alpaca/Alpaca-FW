@@ -51,7 +51,7 @@ const MD_Menu::mnuItem_t menu_items[] = {
 };
 
 const char BUTTON_NAMES[] = "NUL|U|L|D|R|SQR|XRO|CIR|TRI|L1|R1|L2|R2|SHR|OPT|L3|R3|PS|TP";
-const char TP_MODES[] = TP_MODE_TP_N "|" TP_MODE_DPAD_N "|" TP_MODE_LR_N;
+const char TP_MODES[] = TP_MODE_TP_N "|" TP_MODE_DPAD_N "|" TP_MODE_LR_N "|" TP_MODE_TP_C_N;
 
 const MD_Menu::mnuInput_t menu_actions[] = {
     {10, "Press SEL", MD_Menu::INP_RUN, io_test_wrapper, 0, 0, 0, 0, 0, 0, nullptr},
