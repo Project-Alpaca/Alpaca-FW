@@ -24,30 +24,45 @@ MD_Menu::value_t *handle_bool(MD_Menu::mnuId_t id, bool get);
 MD_Menu::value_t menu_buf;
 static uint8_t curr_button = 0;
 
+#ifndef TP_RESISTIVE
+#define TP_RESISTIVE
+#endif
+
+const int MENU_TP_MIN = 100;
+
+#ifdef TP_RESISTIVE
+const int MENU_TP_MAX = 101;
+#endif
+
 const MD_Menu::mnuHeader_t menus[] = {
     {10, "Service Menu", 10, 19, 0},
     {11, "Reboot", 20, 21, 0},
     {12, "Button Config", 31, 32, 0},
+    {20, "TP Sys. Cfg", MENU_TP_MIN, MENU_TP_MAX, 0},
 };
 
 const MD_Menu::mnuItem_t menu_items[] = {
     {10, "Button Test", MD_Menu::MNU_INPUT, 10},
     {11, "TP Test", MD_Menu::MNU_INPUT, 11},
-    {12, "TP Calibration", MD_Menu::MNU_INPUT, 12}, // action 12 runs the calibration function
-    {13, "TP Mode", MD_Menu::MNU_INPUT, 13},
-    {14, "Button Conf...", MD_Menu::MNU_MENU, 12},
-    {15, "TP ADC Zero", MD_Menu::MNU_INPUT, 15},
-    {16, "DS4 Redir.", MD_Menu::MNU_INPUT, 16},
-    {17, "Show PerfCtr.", MD_Menu::MNU_INPUT, 17},
-    {18, "Clear EEPROM", MD_Menu::MNU_INPUT, 18},
-    {19, "Reboot...", MD_Menu::MNU_MENU, 11},
+    {12, "TP Mode", MD_Menu::MNU_INPUT, 13},
+    {13, "Button Conf...", MD_Menu::MNU_MENU, 12},
+    {14, "TP Sys. Cfg...", MD_Menu::MNU_MENU, 20},
+    {15, "DS4 Redir.", MD_Menu::MNU_INPUT, 16},
+    {16, "Show PerfCtr.", MD_Menu::MNU_INPUT, 17},
+    {17, "Clear EEPROM", MD_Menu::MNU_INPUT, 18},
+    {18, "Reboot...", MD_Menu::MNU_MENU, 11},
 
     {20, "Main System", MD_Menu::MNU_INPUT, 20}, // action 20 resets the MCU
     {21, "Bootloader", MD_Menu::MNU_INPUT, 21}, // action 21 reboots into bootloader
-    
+
     //{30, "Source", MD_Menu::MNU_INPUT, 30},
     {31, "ID", MD_Menu::MNU_INPUT, 31},
-    {32, "Assignment", MD_Menu::MNU_INPUT, 32}
+    {32, "Assignment", MD_Menu::MNU_INPUT, 32},
+
+#ifdef TP_RESISTIVE
+    {100, "TP Calibration", MD_Menu::MNU_INPUT, 12}, // action 12 runs the calibration function
+    {101, "TP ADC Zero", MD_Menu::MNU_INPUT, 15},
+#endif
 };
 
 const char BUTTON_NAMES[] = "NUL|U|L|D|R|SQR|XRO|CIR|TRI|L1|R1|L2|R2|SHR|OPT|L3|R3|PS|TP";
