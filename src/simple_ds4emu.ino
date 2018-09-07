@@ -200,32 +200,13 @@ void handle_auth() {
 
 void scan_touchpad(void) {
     uint8_t pos1 = POS_FLOAT, pos2 = POS_FLOAT;
-    int16_t pos1_prev = 0, pos2_prev = 0, pos1_next = 0, pos2_next = 0;
     uint8_t tmpstate;
 
-    // drop outlier
-    for (int i=0; i<6; i++) {
-        uint16_t diff_min1 = 65535, diff_min2 = 65535, diff;
-        RAL.update();
-        RAR.update();
-        SoftPotMagic.update();
-        pos1_prev = pos1_next;
-        pos2_prev = pos2_next;
-        pos1_next = SoftPotMagic.pos1();
-        pos2_next = SoftPotMagic.pos2();
-        if (i > 0) {
-            diff = abs(pos1_prev - pos1_next);
-            if (diff < diff_min1) {
-                diff_min1 = diff;
-                pos1 = (pos1_prev + pos1_next) / 2;
-            }
-            diff = abs(pos2_prev - pos2_next);
-            if (diff < diff_min2) {
-                diff_min2 = diff;
-                pos2 = (pos2_prev + pos2_next) / 2;
-            }
-        }
-    }
+    RAL.update();
+    RAR.update();
+    SoftPotMagic.update();
+    pos1 = SoftPotMagic.pos1();
+    pos2 = SoftPotMagic.pos2();
 
     switch (tp_mode) {
         case TP_MODE_TP_C:
