@@ -47,10 +47,11 @@ const MD_Menu::mnuItem_t menu_items[] = {
     {12, "TP Mode", MD_Menu::MNU_INPUT, 13},
     {13, "Button Conf...", MD_Menu::MNU_MENU, 12},
     {14, "TP Sys. Cfg...", MD_Menu::MNU_MENU, 20},
-    {15, "DS4 Redir.", MD_Menu::MNU_INPUT, 16},
-    {16, "Show PerfCtr.", MD_Menu::MNU_INPUT, 17},
-    {17, "Clear EEPROM", MD_Menu::MNU_INPUT, 18},
-    {18, "Reboot...", MD_Menu::MNU_MENU, 11},
+    {15, "TP+A Hold Frm.", MD_Menu::MNU_INPUT, 19},
+    {16, "DS4 Redir.", MD_Menu::MNU_INPUT, 16},
+    {17, "Show PerfCtr.", MD_Menu::MNU_INPUT, 17},
+    {18, "Clear EEPROM", MD_Menu::MNU_INPUT, 18},
+    {19, "Reboot...", MD_Menu::MNU_MENU, 11},
 
     {20, "Main System", MD_Menu::MNU_INPUT, 20}, // action 20 resets the MCU
     {21, "Bootloader", MD_Menu::MNU_INPUT, 21}, // action 21 reboots into bootloader
@@ -77,6 +78,7 @@ const MD_Menu::mnuInput_t menu_actions[] = {
     {16, "Y/N", MD_Menu::INP_BOOL, handle_bool, 1, 0, 0, 0, 0, 0, nullptr},
     {17, "Y/N", MD_Menu::INP_BOOL, handle_bool, 1, 0, 0, 0, 0, 0, nullptr},
     {18, "Clear EEPROM?", MD_Menu::INP_RUN, clear_eeprom_wrapper, 0, 0, 0, 0, 0, 0, nullptr},
+    {19, "Hold Frame", MD_Menu::INP_INT, handle_int, 3, 0, 0, 255, 0, 10, nullptr},
     {20, "Restart?", MD_Menu::INP_RUN, reboot_wrapper, 0, 0, 0, 0, 0, 0, nullptr},
     {21, "Reboot to BL?", MD_Menu::INP_RUN, reboot_wrapper, 0, 0, 0, 0, 0, 0, nullptr},
     {31, "ID", MD_Menu::INP_INT, handle_int, 2, 0, 0, 15, 0, 10, nullptr},
@@ -393,6 +395,14 @@ MD_Menu::value_t *handle_int(MD_Menu::mnuId_t id, bool get) {
                 menu_buf.value = controller_settings.tp_calib.zeroLevel;
             } else {
                 controller_settings.tp_calib.zeroLevel = menu_buf.value;
+                settings_save(&controller_settings);
+            }
+            break;
+        case 19:
+            if (get) {
+                menu_buf.value = controller_settings.tp_a_hold;
+            } else {
+                controller_settings.tp_a_hold = menu_buf.value;
                 settings_save(&controller_settings);
             }
             break;

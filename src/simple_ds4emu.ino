@@ -332,7 +332,7 @@ void scan_touchpad(void) {
     }
     if (pulse1_frame >= 0) {
         pulse1_frame++;
-        pulse1_frame %= 24;
+        pulse1_frame %= controller_settings.tp_a_hold;
     }
 
     if (pulse2_frame == 0) {
@@ -349,7 +349,7 @@ void scan_touchpad(void) {
     }
     if (pulse2_frame >= 0) {
         pulse2_frame++;
-        pulse2_frame %= 24;
+        pulse2_frame %= controller_settings.tp_a_hold;
     }
 }
 
