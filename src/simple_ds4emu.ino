@@ -203,7 +203,7 @@ void scan_touchpad(void) {
     uint8_t pos1_last_zone = POS_FLOAT, pos2_last_zone = POS_FLOAT;
     static uint8_t pulse1_ctrp = 0, pulse2_ctrp = 0, pulse1_ctrn = 0, pulse2_ctrn = 0;
     static bool pulse1_dir = false, pulse2_dir = false;
-    static int16_t pulse1_frame = 0, pulse2_frame = 0;
+    static int8_t pulse1_frame = 0, pulse2_frame = 0;
     uint8_t tmpstate;
 
     RAL.update();
@@ -319,25 +319,25 @@ void scan_touchpad(void) {
     }
 
     if (pulse1_frame == 0) {
-        if (pulse1_ctrp > 0 && pulse1_dir) {
+        if (pulse1_ctrp > 0 && (pulse1_ctrn == 0 || pulse1_dir)) {
             pulse1_ctrp--;
             DS4.setLeftAnalog(255, 127);
-        } else if (pulse1_ctrn > 0 && !pulse1_dir) {
+        } else if (pulse1_ctrn > 0 && (pulse1_ctrp == 0 || !pulse1_dir)) {
             pulse1_ctrn--;
             DS4.setLeftAnalog(0, 127);
         }
         pulse1_dir = !pulse1_dir;
     }
-    if (pulse1_frame > 0) {
+    if (pulse1_frame >= 0) {
         pulse1_frame++;
-        pulse1_frame &= 3;
+        pulse1_frame &= 24;
     }
 
     if (pulse2_frame == 0) {
-        if (pulse2_ctrp > 0 && pulse2_dir) {
+        if (pulse2_ctrp > 0 && (pulse2_ctrn == 0 || pulse2_dir)) {
             pulse2_ctrp--;
             DS4.setRightAnalog(255, 127);
-        } else if (pulse2_ctrn > 0 && !pulse2_dir) {
+        } else if (pulse2_ctrn > 0 && (pulse2_ctrp == 0 || !pulse2_dir)) {
             pulse2_ctrn--;
             DS4.setRightAnalog(0, 127);
         }
@@ -345,7 +345,7 @@ void scan_touchpad(void) {
     }
     if (pulse2_frame >= 0) {
         pulse2_frame++;
-        pulse2_frame &= 3;
+        pulse2_frame %= 24;
     }
 }
 
