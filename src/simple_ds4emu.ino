@@ -480,7 +480,7 @@ void setup() {
     if (controller_settings.tp_calib.leftMin == -1 || controller_settings.tp_calib.rightMin == -1) {
         service_menu_main();
         while (1);
-    }if (c
+    }
 
     pinMode(BTN_CSL, OUTPUT);
     pinMode(BTN_CSB, OUTPUT);
