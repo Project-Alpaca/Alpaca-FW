@@ -42,7 +42,7 @@ const uint8_t DPAD_MAP[4] = {6, 7, 14, 15}; // ULDR
 uint8_t lamps;
 uint16_t buttons;
 uint8_t tp_mode;
-uint16_t vps;
+volatile uint16_t vps = 0;
 
 void scan_buttons() {
     uint8_t lamps_new;
