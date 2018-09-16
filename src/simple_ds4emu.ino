@@ -23,6 +23,7 @@ ds4_auth_result_t tmp_auth_result = {0};
 USB USBH;
 USBHub Hub1(&USBH);
 PS4USB RealDS4(&USBH);
+IntervalTimer Scan;
 
 #if 0
 const uint8_t BUTTON_MAP[BUTTONS][2] = {
@@ -41,6 +42,7 @@ const uint8_t DPAD_MAP[4] = {6, 7, 14, 15}; // ULDR
 uint8_t lamps;
 uint16_t buttons;
 uint8_t tp_mode;
+uint16_t vps;
 
 void scan_buttons() {
     uint8_t lamps_new;
@@ -154,13 +156,17 @@ void handle_auth() {
         lcd_disp = true;
         ts = millis();
         Serial1.println("I: authChallengeAvailable");
+
         NVIC_DISABLE_IRQ(IRQ_USBOTG);
+        NVIC_DISABLE_IRQ(IRQ_PIT);
         result = RealDS4.SetReport(0, 0, 0x03, 0xf0, sizeof(ds4_auth_t), (uint8_t *) DS4.authGetChallenge());
+        NVIC_ENABLE_IRQ(IRQ_PIT);
         if (result) {
             Serial1.print("E: ");
             Serial1.println(result);
         }
         NVIC_ENABLE_IRQ(IRQ_USBOTG);
+
     // PS4 is asking for trouble
     } else if (DS4.authChallengeSent()) {
         LCD.setCursor(8, 1);
@@ -168,7 +174,9 @@ void handle_auth() {
         lcd_disp = true;
         ts = millis();
         Serial1.println("I: authChallengeSent");
+        NVIC_DISABLE_IRQ(IRQ_PIT);
         result = RealDS4.GetReport(0, 0, 0x03, 0xf2, sizeof(ds4_auth_result_t), (uint8_t *) &tmp_auth_result);
+        NVIC_ENABLE_IRQ(IRQ_PIT);
         if (result) {
             Serial1.print("E: ");
             Serial1.println(result);
@@ -176,7 +184,9 @@ void handle_auth() {
         if (tmp_auth_result.status == 0x00) {
             Serial1.println("I: RealDS4 ok");
             NVIC_DISABLE_IRQ(IRQ_USBOTG);
+            NVIC_DISABLE_IRQ(IRQ_PIT);
             result = RealDS4.GetReport(0, 0, 0x03, 0xf1, sizeof(ds4_auth_t), (uint8_t *) DS4.authGetResponseBuffer());
+            NVIC_ENABLE_IRQ(IRQ_PIT);
             if (result) {
                 Serial1.print("E: ");
                 Serial1.println(result);
@@ -192,7 +202,9 @@ void handle_auth() {
         ts = millis();
         Serial1.println("I: authResponseAvailable");
         NVIC_DISABLE_IRQ(IRQ_USBOTG);
+        NVIC_DISABLE_IRQ(IRQ_PIT);
         RealDS4.GetReport(0, 0, 0x03, 0xf1, sizeof(ds4_auth_t), (uint8_t *) DS4.authGetResponseBuffer());
+        NVIC_ENABLE_IRQ(IRQ_PIT);
         DS4.authSetBufferedFlag();
         NVIC_ENABLE_IRQ(IRQ_USBOTG);
     }
@@ -446,6 +458,12 @@ void handle_ds4_pass(void) {
     DS4.setRightAnalog(RealDS4.getAnalogHat(RightHatX), RealDS4.getAnalogHat(RightHatY));
 }
 
+void _scan_all() {
+    scan_buttons();
+    scan_touchpad();
+    if (controller_settings.perf_ctr) vps++;
+}
+
 void setup() {
     Serial1.begin(115200);
     Serial1.println("I: Hello");
@@ -462,7 +480,7 @@ void setup() {
     if (controller_settings.tp_calib.leftMin == -1 || controller_settings.tp_calib.rightMin == -1) {
         service_menu_main();
         while (1);
-    }
+    }if (c
 
     pinMode(BTN_CSL, OUTPUT);
     pinMode(BTN_CSB, OUTPUT);
@@ -505,42 +523,42 @@ void setup() {
         LCD.setCursor(5, 1);
         LCD.print("DP");
     }
+
+    Scan.begin(_scan_all, SCAN_INTERVAL * 1000);
 }
 
 void loop() {
     // Poll the USBH controller
-    static uint16_t fps = 0, vps = 0;
+    static uint16_t fps = 0;
     static uint32_t perf = millis();
-    static uint32_t elapsed = 0;
 
+    NVIC_DISABLE_IRQ(IRQ_PIT);
     USBH.Task();
     DS4.update();
-    if (millis() - elapsed >= SCAN_INTERVAL) {
-        elapsed = millis();
-        scan_buttons();
-        scan_touchpad();
-        if (controller_settings.perf_ctr) {
-            if (DS4.sendAsync()) {
-                fps++;
-            }
-            vps++;
-        } else {
-            DS4.sendAsync();
+    if (controller_settings.perf_ctr) {
+        if (DS4.sendAsync()) {
+            fps++;
         }
+    } else {
+        DS4.sendAsync();
     }
+    NVIC_ENABLE_IRQ(IRQ_PIT);
 
     handle_auth();
     handle_tp_mode_switch();
     if (controller_settings.ds4_passthrough) handle_ds4_pass();
+
     if (controller_settings.perf_ctr && millis() - perf >= 1000) {
         perf = millis();
         LCD.setCursor(0, 0);
         LCD.print("                ");
+        NVIC_DISABLE_IRQ(IRQ_PIT);
         LCD.setCursor(0, 0);
         LCD.print(fps);
         LCD.setCursor(8, 0);
         LCD.print(vps);
         fps = 0;
         vps = 0;
+        NVIC_ENABLE_IRQ(IRQ_PIT);
     }
 }
