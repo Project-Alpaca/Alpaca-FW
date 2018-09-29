@@ -20,9 +20,32 @@ const uint32_t SCAN_INTERVAL = 1;
 
 ds4_auth_result_t tmp_auth_result = {0};
 
+const uint16_t HORI_VID = 0x0f0d;
+const uint16_t HORI_PID_MINI = 0x00ee;
+
+class PS4USB2: public PS4USB {
+public:
+    PS4USB2(USB *p) : PS4USB(p) {};
+
+    bool connected() {
+        uint16_t v = HIDUniversal::VID;
+        uint16_t p = HIDUniversal::PID;
+        return HIDUniversal::isReady() && (( \
+            v == PS4_VID && ( \
+                p == PS4_PID || \
+                p == PS4_PID_SLIM \
+            )
+        ) || ( \
+            v == HORI_VID && ( \
+                p == HORI_PID_MINI \
+            ) \
+        ));
+    }
+};
+
 USB USBH;
 USBHub Hub1(&USBH);
-PS4USB RealDS4(&USBH);
+PS4USB2 RealDS4(&USBH);
 IntervalTimer Scan;
 
 #if 0
