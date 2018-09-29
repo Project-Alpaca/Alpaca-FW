@@ -313,7 +313,7 @@ diff -Npur framework-arduinoteensy/cores/teensy3/usb_desc.h framework-arduinotee
 +++ framework-arduinoteensy-ds4/cores/teensy3/usb_desc.h	2018-07-16 21:08:46.078061000 -0300
 @@ -864,6 +864,39 @@ let me know?  http://forum.pjrc.com/foru
    #define ENDPOINT14_CONFIG	ENDPOINT_TRANSMIT_ISOCHRONOUS
-   #define ENDPOINT15_CONFIG	ENDPOINT_TRANSIMIT_ONLY
+   #define ENDPOINT15_CONFIG	ENDPOINT_TRANSMIT_ONLY
  
 +#elif defined(USB_DS4)
 +  #define VENDOR_ID		0x16C0
@@ -343,10 +343,10 @@ diff -Npur framework-arduinoteensy/cores/teensy3/usb_desc.h framework-arduinotee
 +  #define SEREMU_RX_ENDPOINT    2
 +  #define SEREMU_RX_SIZE        32
 +  #define SEREMU_RX_INTERVAL    2
-+  #define ENDPOINT1_CONFIG	ENDPOINT_TRANSIMIT_ONLY
++  #define ENDPOINT1_CONFIG	ENDPOINT_TRANSMIT_ONLY
 +  #define ENDPOINT2_CONFIG	ENDPOINT_RECEIVE_ONLY
 +  #define ENDPOINT3_CONFIG	ENDPOINT_RECEIVE_ONLY
-+  #define ENDPOINT4_CONFIG	ENDPOINT_TRANSIMIT_ONLY
++  #define ENDPOINT4_CONFIG	ENDPOINT_TRANSMIT_ONLY
 +
  #endif
  
