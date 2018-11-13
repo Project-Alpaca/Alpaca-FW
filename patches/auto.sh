@@ -13,7 +13,7 @@ mkdir framework-arduinoteensy && \
 tar xzf framework-arduinoteensy-${FRAMEWORK_VER}.tar.gz -C framework-arduinoteensy && \
 tar xzf platform-teensy-${PLATFORM_VER}.tar.gz && \
 mv platform-teensy-${PLATFORM_VER} teensy && \
-patch -p0 < ../framework-arduinoteensy-ds4/00-teensy-cores.patch && \
+patch -p1 -d framework-arduinoteensy/cores < ../framework-arduinoteensy-ds4/00-teensy-cores-git.patch && \
 patch -p0 < ../framework-arduinoteensy-ds4/99-pfio-package-name.patch && \
 patch -p0 < ../platform-teensy.patch && \
 mv framework-arduinoteensy framework-arduinoteensy-ds4 && \
