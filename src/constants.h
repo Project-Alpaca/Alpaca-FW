@@ -9,6 +9,7 @@
 #define TP_MODE_LR 0x02
 #define TP_MODE_TP_C 0x03
 #define TP_MODE_TP_A 0x04
+#define TP_MODE_TP2 0x05
 
 //#define TP_MODE_CUSTOM1 0x10
 //#define TP_MODE_CUSTOM2 0x11
@@ -19,6 +20,7 @@
 #define TP_MODE_LR_N "LR"
 #define TP_MODE_TP_C_N "TP+C"
 #define TP_MODE_TP_A_N "TP+A"
+#define TP_MODE_TP2_N "TP2"
 
 #define BTN2DS4(map) (map - 1)
 #define ISBTN(map) (map >= BTN_SQR && map <= BTN_TP)
