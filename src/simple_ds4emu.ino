@@ -252,6 +252,70 @@ void handle_touchpad_direct_mapping(uint8_t pos1, uint8_t pos2, bool click) {
     }
 }
 
+void handle_touchpad_atrf(uint8_t pos1, uint8_t pos2) {
+    static uint8_t pos1_prev = POS_FLOAT, pos2_prev = POS_FLOAT;
+    static uint8_t stick_hold_frames = 0;
+    static bool released = true;
+
+    bool is_long_slider = (DS4.getRumbleStrengthRight() > 0);
+    bool dir_changed = false;
+
+    if (is_long_slider) {
+        // immediately clear stick states
+        stick_hold_frames = 0;
+        if (pos1 != POS_FLOAT) {
+            // Map both points to pos1
+            // TODO what if moving towards different direction?
+            DS4.setTouchPos1(map(pos1, POS_MIN, POS_MAX, 0, 1919), 314);
+            DS4.setTouchPos2(map(pos1, POS_MIN, POS_MAX, 0, 1919), 628);
+        } else {
+            DS4.releaseTouchAll();
+        }
+    } else {
+        // if slider is being touched
+        if (pos1 != POS_FLOAT) {
+            // and we can check for direction
+            if (pos1_prev != POS_FLOAT) {
+                // left
+                if (pos1 < pos1_prev) {
+                    DS4.setLeftAnalog(0, 127);
+                    dir_changed = true;
+                // right
+                } else if (pos1 > pos1_prev) {
+                    DS4.setLeftAnalog(255, 127);
+                    dir_changed = true;
+                }
+            }
+            // same for the second touch point
+            if (pos2 != POS_FLOAT && pos2_prev != POS_FLOAT) {
+                // left
+                if (pos2 < pos2_prev) {
+                    DS4.setRightAnalog(0, 127);
+                    dir_changed = true;
+                // right
+                } else if (pos2 > pos2_prev) {
+                    DS4.setRightAnalog(255, 127);
+                    dir_changed = true;
+                }
+            }
+        }
+        // check if direction changes. If so, reset frame counter
+        if (dir_changed) {
+            stick_hold_frames = 24;
+            released = false;
+        }
+    }
+    // if waiting for release, then just release
+    if (!released && stick_hold_frames == 0) {
+        DS4.setLeftAnalog(127, 127);
+        DS4.setRightAnalog(127, 127);
+        released = true;
+    }
+    if (stick_hold_frames > 0) stick_hold_frames--;
+    pos1_prev = pos1;
+    pos2_prev = pos2;
+}
+
 void scan_touchpad(void) {
     uint8_t pos1 = POS_FLOAT, pos2 = POS_FLOAT;
     uint8_t tmpstate;
@@ -263,6 +327,9 @@ void scan_touchpad(void) {
     pos2 = SoftPotMagic.pos2();
 
     switch (tp_mode) {
+        case TP_MODE_ATRF:
+            handle_touchpad_atrf(pos1, pos2);
+            break;
         case TP_MODE_TP_C:
         case TP_MODE_TP:
             handle_touchpad_direct_mapping(pos1, pos2, tp_mode == TP_MODE_TP_C);
@@ -339,6 +406,9 @@ void redraw_tp_mode(void) {
             break;
         case TP_MODE_TP_A:
             LCD.print(TP_MODE_TP_A_N);
+            break;
+        case TP_MODE_ATRF:
+            LCD.print(TP_MODE_ATRF_N);
             break;
     }
 }

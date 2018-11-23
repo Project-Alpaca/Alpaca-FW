@@ -3,7 +3,7 @@
 #include <Arduino.h>
 #include <SPI.h>
 
-#define TP_NB_MODES 5
+#define TP_NB_MODES 6
 #define TP_MODE_TP 0x00
 #define TP_MODE_DPAD 0x01
 #define TP_MODE_LR 0x02
