@@ -233,12 +233,27 @@ void handle_auth() {
     }
 }
 
+void handle_touchpad_direct_mapping(uint8_t pos1, uint8_t pos2, bool click) {
+    if (pos1 != POS_FLOAT) {
+        if (click) {
+            DS4.pressButton(DS4_BTN_TOUCH);
+        }
+        DS4.setTouchPos1(map(pos1, POS_MIN, POS_MAX, 0, 1919), 471);
+        if (pos2 != POS_FLOAT) {
+            DS4.setTouchPos2(map(pos2, POS_MIN, POS_MAX, 0, 1919), 471);
+        } else {
+            DS4.releaseTouchPos2();
+        }
+    } else {
+        if (click) {
+            DS4.releaseButton(DS4_BTN_TOUCH);
+        }
+        DS4.releaseTouchAll();
+    }
+}
+
 void scan_touchpad(void) {
     uint8_t pos1 = POS_FLOAT, pos2 = POS_FLOAT;
-    static uint8_t pos1_last_zone = POS_FLOAT, pos2_last_zone = POS_FLOAT;
-    static uint8_t pulse1_ctrp = 0, pulse2_ctrp = 0, pulse1_ctrn = 0, pulse2_ctrn = 0;
-    static bool pulse1_dir = false, pulse2_dir = false;
-    static int8_t pulse1_frame = 0, pulse2_frame = 0;
     uint8_t tmpstate;
 
     RAL.update();
@@ -248,58 +263,9 @@ void scan_touchpad(void) {
     pos2 = SoftPotMagic.pos2();
 
     switch (tp_mode) {
-        case TP_MODE_TP_A:
         case TP_MODE_TP_C:
         case TP_MODE_TP:
-            if (pos1 != POS_FLOAT) {
-                if (tp_mode == TP_MODE_TP_A) {
-                    //pulse1_frame = 0;
-                    if (pos1_last_zone == POS_FLOAT) {
-                        pos1_last_zone = pos1 >> 5;
-                    } else {
-                        int8_t delta = (int8_t) (pos1 >> 5) - pos1_last_zone;
-                        if (delta > 0) {
-                            pulse1_ctrp += delta;
-                        } else if (delta < 0) {
-                            pulse1_ctrn += abs(delta);
-                        }
-                        pos1_last_zone = pos1 >> 5;
-                    }
-                } else if (tp_mode == TP_MODE_TP_C) {
-                    DS4.pressButton(DS4_BTN_TOUCH);
-                }
-                DS4.setTouchPos1(map(pos1, POS_MIN, POS_MAX, 0, 1919), 471);
-                if (pos2 != POS_FLOAT) {
-                    //pulse2_frame = 0;
-                    if (tp_mode == TP_MODE_TP_A) {
-                        if (pos2_last_zone == POS_FLOAT) {
-                            pos2_last_zone = pos2 >> 5;
-                        } else {
-                            int8_t delta = (int8_t) (pos2 >> 5) - pos2_last_zone;
-                            if (delta > 0) {
-                                pulse2_ctrp += delta;
-                            } else if (delta < 0) {
-                                pulse2_ctrn += abs(delta);
-                            }
-                            pos2_last_zone = pos2 >> 5;
-                        }
-                    }
-                    DS4.setTouchPos2(map(pos2, POS_MIN, POS_MAX, 0, 1919), 471);
-                } else {
-                    DS4.releaseTouchPos2();
-                    //pulse2_frame = -1;
-                    pos2_last_zone = POS_FLOAT;
-                }
-            } else {
-                if (tp_mode == TP_MODE_TP_C) {
-                    DS4.releaseButton(DS4_BTN_TOUCH);
-                }
-                DS4.releaseTouchAll();
-                //pulse1_frame = -1;
-                //pulse2_frame = -1;
-                pos1_last_zone = POS_FLOAT;
-                pos2_last_zone = POS_FLOAT;
-            }
+            handle_touchpad_direct_mapping(pos1, pos2, tp_mode == TP_MODE_TP_C);
             break;
         // ULRD
         case TP_MODE_DPAD:
@@ -351,40 +317,6 @@ void scan_touchpad(void) {
         case TP_MODE_LR:
             // TODO
             break;
-    }
-
-    if (pulse1_frame == 0) {
-        if (pulse1_ctrp > 0 && (pulse1_ctrn == 0 || pulse1_dir)) {
-            pulse1_ctrp--;
-            DS4.setLeftAnalog(255, 127);
-        } else if (pulse1_ctrn > 0 && (pulse1_ctrp == 0 || !pulse1_dir)) {
-            pulse1_ctrn--;
-            DS4.setLeftAnalog(0, 127);
-        } else if (pulse1_ctrn == 0 && pulse1_ctrp == 0) {
-            DS4.setLeftAnalog(127, 127);
-        }
-        pulse1_dir = !pulse1_dir;
-    }
-    if (pulse1_frame >= 0) {
-        pulse1_frame++;
-        pulse1_frame %= controller_settings.tp_a_hold;
-    }
-
-    if (pulse2_frame == 0) {
-        if (pulse2_ctrp > 0 && (pulse2_ctrn == 0 || pulse2_dir)) {
-            pulse2_ctrp--;
-            DS4.setRightAnalog(255, 127);
-        } else if (pulse2_ctrn > 0 && (pulse2_ctrp == 0 || !pulse2_dir)) {
-            pulse2_ctrn--;
-            DS4.setRightAnalog(0, 127);
-        } else if (pulse2_ctrn == 0 && pulse2_ctrp == 0) {
-            DS4.setRightAnalog(127, 127);
-        }
-        pulse2_dir = !pulse2_dir;
-    }
-    if (pulse2_frame >= 0) {
-        pulse2_frame++;
-        pulse2_frame %= controller_settings.tp_a_hold;
     }
 }
 
