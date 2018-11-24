@@ -1,6 +1,8 @@
-diff -Npur framework-arduinoteensy/cores/teensy3/InternalCRC32.cpp framework-arduinoteensy-ds4/cores/teensy3/InternalCRC32.cpp
---- framework-arduinoteensy/cores/teensy3/InternalCRC32.cpp	1969-12-31 20:00:00.000000000 -0400
-+++ framework-arduinoteensy-ds4/cores/teensy3/InternalCRC32.cpp	2018-07-18 17:00:58.073049041 -0300
+diff --git a/teensy3/InternalCRC32.cpp b/teensy3/InternalCRC32.cpp
+new file mode 100644
+index 0000000..ba628da
+--- /dev/null
++++ b/teensy3/InternalCRC32.cpp
 @@ -0,0 +1,58 @@
 +// CRC32 library by Christopher Baker, modified to integrate into teensy-ds4
 +
@@ -60,9 +62,11 @@ diff -Npur framework-arduinoteensy/cores/teensy3/InternalCRC32.cpp framework-ard
 +{
 +    return ~_state;
 +}
-diff -Npur framework-arduinoteensy/cores/teensy3/InternalCRC32.h framework-arduinoteensy-ds4/cores/teensy3/InternalCRC32.h
---- framework-arduinoteensy/cores/teensy3/InternalCRC32.h	1969-12-31 20:00:00.000000000 -0400
-+++ framework-arduinoteensy-ds4/cores/teensy3/InternalCRC32.h	2018-07-18 16:59:49.111364894 -0300
+diff --git a/teensy3/InternalCRC32.h b/teensy3/InternalCRC32.h
+new file mode 100644
+index 0000000..1aa8891
+--- /dev/null
++++ b/teensy3/InternalCRC32.h
 @@ -0,0 +1,79 @@
 +// CRC32 library by Christopher Baker, modified to integrate into teensy-ds4
 +
@@ -143,10 +147,23 @@ diff -Npur framework-arduinoteensy/cores/teensy3/InternalCRC32.h framework-ardui
 +    uint32_t _state = ~0L;
 +
 +};
-diff -Npur framework-arduinoteensy/cores/teensy3/usb_desc.c framework-arduinoteensy-ds4/cores/teensy3/usb_desc.c
---- framework-arduinoteensy/cores/teensy3/usb_desc.c	2018-02-07 10:15:58.000000000 -0400
-+++ framework-arduinoteensy-ds4/cores/teensy3/usb_desc.c	2018-07-16 21:08:46.074727000 -0300
-@@ -451,6 +451,90 @@ static uint8_t flightsim_report_desc[] =
+diff --git a/teensy3/WProgram.h b/teensy3/WProgram.h
+index e67de41..688d3a9 100644
+--- a/teensy3/WProgram.h
++++ b/teensy3/WProgram.h
+@@ -62,6 +62,7 @@
+ #include "usb_mtp.h"
+ #include "usb_audio.h"
+ #include "usb_touch.h"
++#include "usb_ds4.h"
+ #include "usb_undef.h" // do not allow usb_desc.h stuff to leak to user programs
+ 
+ #include "WCharacter.h"
+diff --git a/teensy3/usb_desc.c b/teensy3/usb_desc.c
+index 182ae6d..2070ca3 100644
+--- a/teensy3/usb_desc.c
++++ b/teensy3/usb_desc.c
+@@ -461,6 +461,90 @@ static uint8_t flightsim_report_desc[] = {
  };
  #endif
  
@@ -237,7 +254,7 @@ diff -Npur framework-arduinoteensy/cores/teensy3/usb_desc.c framework-arduinotee
  
  // **************************************************************
  //   USB Descriptor Sizes
-@@ -562,7 +646,15 @@ static uint8_t flightsim_report_desc[] =
+@@ -572,7 +656,15 @@ static uint8_t flightsim_report_desc[] = {
  #define MULTITOUCH_INTERFACE_DESC_SIZE	0
  #endif
  
@@ -254,7 +271,7 @@ diff -Npur framework-arduinoteensy/cores/teensy3/usb_desc.c framework-arduinotee
  
  
  
-@@ -1391,6 +1483,42 @@ static uint8_t config_descriptor[CONFIG_
+@@ -1401,6 +1493,42 @@ static uint8_t config_descriptor[CONFIG_DESC_SIZE] = {
          MULTITOUCH_SIZE, 0,                     // wMaxPacketSize
          1,                                      // bInterval
  #endif // KEYMEDIA_INTERFACE
@@ -297,21 +314,22 @@ diff -Npur framework-arduinoteensy/cores/teensy3/usb_desc.c framework-arduinotee
  };
  
  
-@@ -1526,6 +1654,10 @@ const usb_descriptor_list_t usb_descript
+@@ -1535,6 +1663,10 @@ const usb_descriptor_list_t usb_descriptor_list[] = {
+ #endif
  #ifdef MTP_INTERFACE
  	{0x0304, 0x0409, (const uint8_t *)&usb_string_mtp, 0},
- #endif
++#endif
 +#ifdef DS4_INTERFACE
 +	{0x2200, DS4_INTERFACE, ds4_report_desc, sizeof(ds4_report_desc)},
 +	{0x2100, DS4_INTERFACE, config_descriptor+DS4_HID_DESC_OFFSET, 9},
-+#endif
+ #endif
          {0x0300, 0x0000, (const uint8_t *)&string0, 0},
          {0x0301, 0x0409, (const uint8_t *)&usb_string_manufacturer_name, 0},
-         {0x0302, 0x0409, (const uint8_t *)&usb_string_product_name, 0},
-diff -Npur framework-arduinoteensy/cores/teensy3/usb_desc.h framework-arduinoteensy-ds4/cores/teensy3/usb_desc.h
---- framework-arduinoteensy/cores/teensy3/usb_desc.h	2018-02-07 10:15:58.000000000 -0400
-+++ framework-arduinoteensy-ds4/cores/teensy3/usb_desc.h	2018-07-16 21:08:46.078061000 -0300
-@@ -864,6 +864,39 @@ let me know?  http://forum.pjrc.com/foru
+diff --git a/teensy3/usb_desc.h b/teensy3/usb_desc.h
+index 7aaacd3..4c27c3a 100644
+--- a/teensy3/usb_desc.h
++++ b/teensy3/usb_desc.h
+@@ -865,6 +865,44 @@ let me know?  http://forum.pjrc.com/forums/4-Suggestions-amp-Bug-Reports
    #define ENDPOINT14_CONFIG	ENDPOINT_TRANSMIT_ISOCHRONOUS
    #define ENDPOINT15_CONFIG	ENDPOINT_TRANSMIT_ONLY
  
@@ -328,19 +346,24 @@ diff -Npur framework-arduinoteensy/cores/teensy3/usb_desc.h framework-arduinotee
 +  #define EP0_SIZE		64
 +  #define NUM_ENDPOINTS         4
 +  #define NUM_USB_BUFFERS	12
-+  #define NUM_INTERFACE		1
++  #define NUM_INTERFACE		2
 +  #define DS4_INTERFACE      0	// DS4
-+  #define DS4_TX_ENDPOINT    4
++  #define DS4_TX_ENDPOINT    1
 +  #define DS4_TX_SIZE        64
-+  #define DS4_TX_INTERVAL    5
-+  #define DS4_RX_ENDPOINT    3
++  #define DS4_RX_ENDPOINT    2
 +  #define DS4_RX_SIZE        64
-+  #define DS4_RX_INTERVAL    5
++  #if defined(USB_DS4_TURBO) && USB_DS4_TURBO == 1
++    #define DS4_TX_INTERVAL    1
++    #define DS4_RX_INTERVAL    1
++  #else
++    #define DS4_TX_INTERVAL    5
++    #define DS4_RX_INTERVAL    5
++  #endif
 +  #define SEREMU_INTERFACE      1	// Serial emulation
-+  #define SEREMU_TX_ENDPOINT    1
++  #define SEREMU_TX_ENDPOINT    3
 +  #define SEREMU_TX_SIZE        64
 +  #define SEREMU_TX_INTERVAL    1
-+  #define SEREMU_RX_ENDPOINT    2
++  #define SEREMU_RX_ENDPOINT    4
 +  #define SEREMU_RX_SIZE        32
 +  #define SEREMU_RX_INTERVAL    2
 +  #define ENDPOINT1_CONFIG	ENDPOINT_TRANSMIT_ONLY
@@ -351,10 +374,11 @@ diff -Npur framework-arduinoteensy/cores/teensy3/usb_desc.h framework-arduinotee
  #endif
  
  #ifdef USB_DESC_LIST_DEFINE
-diff -Npur framework-arduinoteensy/cores/teensy3/usb_dev.c framework-arduinoteensy-ds4/cores/teensy3/usb_dev.c
---- framework-arduinoteensy/cores/teensy3/usb_dev.c	2018-02-07 10:15:58.000000000 -0400
-+++ framework-arduinoteensy-ds4/cores/teensy3/usb_dev.c	2018-07-31 00:46:48.981774057 -0300
-@@ -379,12 +379,34 @@ static void usb_setup(void)
+diff --git a/teensy3/usb_dev.c b/teensy3/usb_dev.c
+index c484d93..4f5bc88 100644
+--- a/teensy3/usb_dev.c
++++ b/teensy3/usb_dev.c
+@@ -387,12 +387,24 @@ static void usb_setup(void)
  #endif
  
  // TODO: this does not work... why?
@@ -363,16 +387,6 @@ diff -Npur framework-arduinoteensy/cores/teensy3/usb_dev.c framework-arduinoteen
  	  case 0x0921: // HID SET_REPORT
  		//serial_print(":)\n");
 -		return;
-+#if defined(DS4_INTERFACE)
-+        // DS4: set feature report 0xf0 (setChallenge)
-+		if (setup.wValue != 0x03f0) {
-+			// reject everything that we don't know, leave the rest to usb_control()
-+			//serial_print("E: unknown feature report");
-+			//serial_phex16(setup.wValue);
-+			//serial_print("\n");
-+			endpoint0_stall();
-+		}
-+#endif
 +		break;
  	  case 0x0A21: // HID SET_IDLE
  		break;
@@ -391,26 +405,23 @@ diff -Npur framework-arduinoteensy/cores/teensy3/usb_dev.c framework-arduinoteen
  	  // case 0xC940:
  #endif
  
-@@ -615,6 +637,15 @@ static void usb_control(uint32_t stat)
+@@ -626,6 +638,11 @@ static void usb_control(uint32_t stat)
+ 		if (usb_audio_set_feature(&setup, buf)) {
  			endpoint0_transmit(NULL, 0);
  		}
- #endif
-+#ifdef DS4_INTERFACE
-+	    // Don't send 0 len packet as a mean of ack
-+	    //if (setup.wRequestAndType == 0x0921 && !usb_ds4_on_set_report(&setup, buf)) {
-+	    //	//endpoint0_transmit(NULL, 0);
-+	    //}
-+	    if (setup.wRequestAndType == 0x0921) {
-+	    	usb_ds4_on_set_report(&setup, buf);
-+	    }
 +#endif
++#ifdef DS4_INTERFACE
++		if (setup.wRequestAndType == 0x0921) {
++			usb_ds4_on_set_report(&setup, buf);
++		}
+ #endif
  		// give the buffer back
  		b->desc = BDT_DESC(EP0_SIZE, DATA1);
- 		break;
-diff -Npur framework-arduinoteensy/cores/teensy3/usb_dev.h framework-arduinoteensy-ds4/cores/teensy3/usb_dev.h
---- framework-arduinoteensy/cores/teensy3/usb_dev.h	2018-02-07 10:15:58.000000000 -0400
-+++ framework-arduinoteensy-ds4/cores/teensy3/usb_dev.h	2018-07-16 21:08:46.078061000 -0300
-@@ -114,6 +114,11 @@ extern int usb_audio_set_feature(void *s
+diff --git a/teensy3/usb_dev.h b/teensy3/usb_dev.h
+index 1233d7f..daf1c7c 100644
+--- a/teensy3/usb_dev.h
++++ b/teensy3/usb_dev.h
+@@ -114,6 +114,11 @@ extern int usb_audio_set_feature(void *stp, uint8_t *buf);
  extern void usb_touchscreen_update_callback(void);
  #endif
  
@@ -422,10 +433,12 @@ diff -Npur framework-arduinoteensy/cores/teensy3/usb_dev.h framework-arduinoteen
  
  #ifdef __cplusplus
  }
-diff -Npur framework-arduinoteensy/cores/teensy3/usb_ds4.cpp framework-arduinoteensy-ds4/cores/teensy3/usb_ds4.cpp
---- framework-arduinoteensy/cores/teensy3/usb_ds4.cpp	1969-12-31 20:00:00.000000000 -0400
-+++ framework-arduinoteensy-ds4/cores/teensy3/usb_ds4.cpp	2018-07-31 00:33:26.081724571 -0300
-@@ -0,0 +1,363 @@
+diff --git a/teensy3/usb_ds4.cpp b/teensy3/usb_ds4.cpp
+new file mode 100644
+index 0000000..b495fcc
+--- /dev/null
++++ b/teensy3/usb_ds4.cpp
+@@ -0,0 +1,377 @@
 +/* Teensyduino Core Library
 + * http://www.pjrc.com/teensy/
 + * Copyright (c) 2017 PJRC.COM, LLC.
@@ -485,9 +498,16 @@ diff -Npur framework-arduinoteensy/cores/teensy3/usb_ds4.cpp framework-arduinote
 +#define debug_phex32(args) while (0) {}
 +#endif
 +
-+// Ripped from GIMX HoriPad emulation firmware
++// Was ripped from GIMX HoriPad emulation firmware, now ripped from Hori Mini
++// packet capture, with patched feature bits.
++// (The philosophical question is, since it seems that the only reason why a
++// Hori Mini behaves like a Hori Mini is because of the feature bits, are we
++// still emulating a Hori Mini if the feature bits got patched?)
++// Anyway this seems to be a configuration that used by DS4 to determine what
++// hardware are available on the controller (byte 5) and what type of controller
++// it is (byte 6).
 +static const uint8_t replay_report_0x03[] = {
-+    0x03, 0x21, 0x27, 0x04, 0x41, 0x00, 0x2c, 0x56,
++    0x03, 0x21, 0x27, 0x04, 0x4d, 0x00, 0x2c, 0x56,
 +    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 +    0x00, 0x00, 0x0d, 0x0d, 0x00, 0x00, 0x00, 0x00,
 +    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -587,21 +607,19 @@ diff -Npur framework-arduinoteensy/cores/teensy3/usb_ds4.cpp framework-arduinote
 +                result->status = 0x00;
 +                _auth_challenge_sent = false;
 +            }
-+            // TODO fix crc
 +            _cksum.reset();
 +            _cksum.update((uint8_t *) result, sizeof(ds4_auth_result_t) - sizeof(uint32_t));
-+            
 +            result->crc32 = _cksum.finalize();
 +            *len = sizeof(ds4_auth_result_t);
 +            _cksum.reset();
 +            break;
-+        case 0x0303: // horiReport0x03
-+            debug_print("I: horiReport0x03\n");
++        case 0x0303: // licensedGetHWConfig
++            debug_print("I: licensedGetHWConfig\n");
 +            memcpy(data, replay_report_0x03, sizeof(replay_report_0x03));
 +            *len = sizeof(replay_report_0x03);
 +            break;
-+        case 0x03f3: // horiReport0xf3
-+            debug_print("I: horiReport0xf3\n");
++        case 0x03f3: // licensedReport0xf3
++            debug_print("I: licensedReport0xf3\n");
 +            memcpy(data, replay_report_0xf3, sizeof(replay_report_0xf3));
 +            *len = sizeof(replay_report_0xf3);
 +            break;
@@ -733,6 +751,15 @@ diff -Npur framework-arduinoteensy/cores/teensy3/usb_ds4.cpp framework-arduinote
 +            if (recv_buffer[0] == 0x05) {
 +                debug_print("I: report ok\n");
 +                memcpy((void *) feedback, (const void *) recv_buffer, sizeof(ds4_feedback_t));
++                for (int i=0; i<32; i++) {
++                    debug_phex(recv_buffer[i]);
++                    if (i == 15) {
++                        debug_print("\n");
++                    } else {
++                        debug_print(" ");
++                    }
++                }
++                debug_print("\n");
 +            } else {
 +                debug_print("E: unknown OUT report");
 +                debug_phex(recv_buffer[0]);
@@ -789,10 +816,12 @@ diff -Npur framework-arduinoteensy/cores/teensy3/usb_ds4.cpp framework-arduinote
 +
 +#endif // F_CPU >= 20000000
 +#endif // DS4_INTERFACE
-diff -Npur framework-arduinoteensy/cores/teensy3/usb_ds4.h framework-arduinoteensy-ds4/cores/teensy3/usb_ds4.h
---- framework-arduinoteensy/cores/teensy3/usb_ds4.h	1969-12-31 20:00:00.000000000 -0400
-+++ framework-arduinoteensy-ds4/cores/teensy3/usb_ds4.h	2018-07-31 21:09:19.138514408 -0300
-@@ -0,0 +1,324 @@
+diff --git a/teensy3/usb_ds4.h b/teensy3/usb_ds4.h
+new file mode 100644
+index 0000000..87d5bf9
+--- /dev/null
++++ b/teensy3/usb_ds4.h
+@@ -0,0 +1,379 @@
 +/* Teensyduino Core Library
 + * http://www.pjrc.com/teensy/
 + * Copyright (c) 2017 PJRC.COM, LLC.
@@ -925,8 +954,37 @@ diff -Npur framework-arduinoteensy/cores/teensy3/usb_ds4.h framework-arduinoteen
 +    uint8_t led_color[3]; // 6-8
 +    uint8_t led_flash_on; // 9
 +    uint8_t led_flash_off; // 10
-+    uint8_t padding[20]; // 11-30
++    uint8_t padding[21]; // 11-31
 +} __attribute__((packed)) ds4_feedback_t;
++
++typedef struct {
++    uint8_t type; // 0
++    uint8_t host_bdaddr[6]; // 1-6
++    uint8_t link_key[16]; // 7-22
++} __attribute__((packed)) ds4_pair_t;
++
++typedef struct {
++    uint8_t type; // 0
++    uint8_t deivce_bdaddr[6]; // 1-6
++    uint8_t u7[3]; // 7-9
++    uint8_t host_bdaddr[6]; // 10-15
++} __attribute__((packed)) ds4_pair_status_t;
++
++typedef struct {
++    uint8_t date[16]; // 0-15
++    uint8_t time[16]; // 16-31
++    uint16_t hw_major; // 32-33
++    uint16_t hw_minor; // 34-35
++    uint32_t fw_major; // 36-39
++    uint16_t fw_minor; // 40-41
++    uint16_t fw_series; // 42-43
++    uint32_t code_size; // 44-47
++} __attribute__((packed)) ds4_revision_t;
++
++typedef struct {
++    uint8_t type; // 0
++    ds4_revision_t revision; // 1-48
++} __attribute__((packed)) ds4_getrevision_t;
 +
 +#define DS4_DPAD_SET(buttons, dir) \
 +    buttons[0] ^= buttons[0] & 0x0f; \
@@ -1089,6 +1147,32 @@ diff -Npur framework-arduinoteensy/cores/teensy3/usb_ds4.h framework-arduinoteen
 +        reportBuffer.frames[0].seq++;
 +    }
 +
++    bool hasValidFeedback(void) {
++        return (feedbackBuffer.type == 0x05) ? true : false;
++    }
++
++    uint8_t getRumbleStrengthRight(void) {
++        return feedbackBuffer.rumble_right;
++    }
++
++    uint8_t getRumbleStrengthLeft(void) {
++        return feedbackBuffer.rumble_left;
++    }
++
++    uint32_t getLEDRGB(void) {
++        return (uint32_t) feedbackBuffer.led_color[0] << 16 |
++               (uint32_t) feedbackBuffer.led_color[1] << 8 |
++               feedbackBuffer.led_color[2];
++    }
++
++    uint8_t getLEDBlinkOnDelay(void) {
++        return feedbackBuffer.led_flash_on;
++    }
++
++    uint8_t getLEDBlinkOffDelay(void) {
++        return feedbackBuffer.led_flash_off;
++    }
++
 +    // Run these in critical section to prevent race conditions
 +    // true if there's new challenge, false otherwise
 +    bool authChallengeAvailable(void);
@@ -1117,9 +1201,10 @@ diff -Npur framework-arduinoteensy/cores/teensy3/usb_ds4.h framework-arduinoteen
 +
 +#endif /* DS4_INTERFACE */
 +#endif /* __USB_DS4_H__ */
-diff -Npur framework-arduinoteensy/cores/teensy3/usb_inst.cpp framework-arduinoteensy-ds4/cores/teensy3/usb_inst.cpp
---- framework-arduinoteensy/cores/teensy3/usb_inst.cpp	2018-02-07 10:15:58.000000000 -0400
-+++ framework-arduinoteensy-ds4/cores/teensy3/usb_inst.cpp	2018-07-16 21:08:46.078061000 -0300
+diff --git a/teensy3/usb_inst.cpp b/teensy3/usb_inst.cpp
+index 224c13d..ff10f33 100644
+--- a/teensy3/usb_inst.cpp
++++ b/teensy3/usb_inst.cpp
 @@ -68,6 +68,10 @@ usb_joystick_class Joystick;
  uint8_t usb_joystick_class::manual_mode = 0;
  #endif
@@ -1131,9 +1216,10 @@ diff -Npur framework-arduinoteensy/cores/teensy3/usb_inst.cpp framework-arduinot
  #ifdef USB_DISABLED
  usb_serial_class Serial;
  #endif
-diff -Npur framework-arduinoteensy/cores/teensy3/usb_undef.h framework-arduinoteensy-ds4/cores/teensy3/usb_undef.h
---- framework-arduinoteensy/cores/teensy3/usb_undef.h	2018-02-07 10:15:58.000000000 -0400
-+++ framework-arduinoteensy-ds4/cores/teensy3/usb_undef.h	2018-07-16 21:08:46.078061000 -0300
+diff --git a/teensy3/usb_undef.h b/teensy3/usb_undef.h
+index e7d0886..21b8b41 100644
+--- a/teensy3/usb_undef.h
++++ b/teensy3/usb_undef.h
 @@ -251,6 +251,27 @@
  #ifdef MTP_EVENT_INTERVAL
  #undef MTP_EVENT_INTERVAL
@@ -1162,14 +1248,3 @@ diff -Npur framework-arduinoteensy/cores/teensy3/usb_undef.h framework-arduinote
  #ifdef ENDPOINT1_CONFIG
  #undef ENDPOINT1_CONFIG
  #endif
-diff -Npur framework-arduinoteensy/cores/teensy3/WProgram.h framework-arduinoteensy-ds4/cores/teensy3/WProgram.h
---- framework-arduinoteensy/cores/teensy3/WProgram.h	2018-02-07 10:15:58.000000000 -0400
-+++ framework-arduinoteensy-ds4/cores/teensy3/WProgram.h	2018-07-16 21:08:46.078061000 -0300
-@@ -62,6 +62,7 @@
- #include "usb_mtp.h"
- #include "usb_audio.h"
- #include "usb_touch.h"
-+#include "usb_ds4.h"
- #include "usb_undef.h" // do not allow usb_desc.h stuff to leak to user programs
- 
- #include "WCharacter.h"
