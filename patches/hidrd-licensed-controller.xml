@@ -1,13 +1,15 @@
 <?xml version="1.0"?>
 
 <!--
-Hori FPS HID Report Descriptor
+Universal HID Report Descriptor for PS4 Licensed Controllers
 
-Gathered from GIMX firmware
+Originally gathered from GIMX firmware, then verified on some other PS4 licensed
+controllers (or devices that try to emulate them)
 
-Note that Hori FPS uses 6500, 1500 and 3500 instead of 64, 14 and 34 for empty
-unit, logical minimum and physical minimum. These needs to be patched beore it
-can be used to emulate such controller.
+Note that the original descriptor uses 6500, 1500 and 3500 instead of 64, 14 and
+34 for empty unit, logical minimum and physical minimum. These needs to be
+patched beore it can be used to emulate such controller (otherwise PS4 will not
+register the controller properly).
 -->
 
 <descriptor xmlns="http://digimend.sourceforge.net"
@@ -103,7 +105,7 @@ can be used to emulate such controller.
       <variable/>
     </output>
 
-    <!-- Hori Report 0x03 (Purpose Unknown) -->
+    <!-- Get Controller Hardware Configuration -->
     <report_id>3</report_id>
     <usage>2721</usage>
     <report_count>47</report_count>
@@ -142,7 +144,7 @@ can be used to emulate such controller.
       <variable/>
     </feature>
 
-    <!-- Hori Report 0xf3 -->
+    <!-- Unknown Report 0xf3 (Get Authentication Method?) -->
     <report_id>243</report_id>
     <usage>4701</usage>
     <report_count>7</report_count>
