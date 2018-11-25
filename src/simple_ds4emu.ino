@@ -16,7 +16,18 @@
 #include "settings.h"
 #include "constants.h"
 
-const uint32_t SCAN_INTERVAL = 1;
+// Debug info
+#if defined(DS4_DEBUG_INFO) && DS4_DEBUG_INFO == 1
+    #define DEBUG_CONSOLE_INIT() Serial1.begin(115200)
+    #define DEBUG_CONSOLE_PRINT(args) Serial1.print(args)
+    #define DEBUG_CONSOLE_PRINTLN(args) Serial1.println(args)
+#else
+    #define DEBUG_CONSOLE_INIT() while (0) {}
+    #define DEBUG_CONSOLE_PRINT(args) while (0) {}
+    #define DEBUG_CONSOLE_PRINTLN(args) while (0) {}
+#endif
+
+const uint32_t SCAN_INTERVAL_US = 1000;
 
 ds4_auth_result_t tmp_auth_result = {0};
 
@@ -52,24 +63,13 @@ USBHub Hub1(&USBH);
 PS4USB2 RealDS4(&USBH);
 IntervalTimer Scan;
 
-#if 0
-const uint8_t BUTTON_MAP[BUTTONS][2] = {
-    {3, DS4_BTN_TRIANGLE},
-    {2, DS4_BTN_SQUARE},
-    {1, DS4_BTN_CROSS},
-    {0, DS4_BTN_CIRCLE},
-    {8, DS4_BTN_SHARE},
-    {9, DS4_BTN_PS},
-    {10, DS4_BTN_OPTION}
-};
-#endif
-
 const uint8_t DPAD_MAP[4] = {6, 7, 14, 15}; // ULDR
 
 uint8_t lamps;
 uint16_t buttons;
 uint8_t tp_mode;
-volatile uint16_t vps = 0;
+// Scans-per-second conter
+volatile uint16_t sps = 0;
 
 void scan_buttons() {
     uint8_t lamps_new;
@@ -93,16 +93,6 @@ void scan_buttons() {
         lamps = lamps_new;
     }
 
-#if 0
-    for (int i=0; i<BUTTONS; i++) {
-        // active low
-        if (!(buttons & (1 << BUTTON_MAP[i][0]))) {
-            DS4.pressButton(BUTTON_MAP[i][1]);
-        } else {
-            DS4.releaseButton(BUTTON_MAP[i][1]);
-        }
-    }
-#endif
     for (uint8_t i=0; i<16; i++) {
         if (ISBTN(controller_settings.button_mapping[i])) {
             if (!(buttons & (1 << i))) {
@@ -113,46 +103,6 @@ void scan_buttons() {
         }
     }
 }
-
-#if 0
-void scan_dpad() {
-    uint8_t tmpstate = 0;
-    // RDLU
-    for (int i=0; i<4; i++) {
-        if (digitalRead(DPAD_MAP[i]) == LOW) {
-            tmpstate |= 1 << i;
-        }
-    }
-    switch (tmpstate) {
-        case 1:
-            DS4.pressDpad(DS4_DPAD_N);
-            break;
-        case 2:
-            DS4.pressDpad(DS4_DPAD_W);
-            break;
-        case 4:
-            DS4.pressDpad(DS4_DPAD_S);
-            break;
-        case 8:
-            DS4.pressDpad(DS4_DPAD_E);
-            break;
-        case 3: // UL
-            DS4.pressDpad(DS4_DPAD_NW);
-            break;
-        case 6: // LD
-            DS4.pressDpad(DS4_DPAD_SW);
-            break;
-        case 12: // DR
-            DS4.pressDpad(DS4_DPAD_SE);
-            break;
-        case 9: // UR
-            DS4.pressDpad(DS4_DPAD_NE);
-            break;
-        default:
-            DS4.releaseDpad();
-    }
-}
-#endif
 
 void handle_auth() {
     static bool lcd_disp = false;
@@ -183,15 +133,15 @@ void handle_auth() {
         LCD.print("Q");
         lcd_disp = true;
         ts = millis();
-        Serial1.println("I: authChallengeAvailable");
+        DEBUG_CONSOLE_PRINTLN("I: authChallengeAvailable");
         if (RealDS4.isLicensed() && DS4.authGetChallenge()->page == 0) {
-            Serial1.println("I: licensed controller, resetting");
+            DEBUG_CONSOLE_PRINTLN("I: licensed controller, resetting");
             NVIC_DISABLE_IRQ(IRQ_PIT);
             result = RealDS4.GetReport(0, 0, 0x03, 0xf3, sizeof(reset_buffer), reset_buffer);
             NVIC_ENABLE_IRQ(IRQ_PIT);
             if (result) {
-                Serial1.print("E: ");
-                Serial1.println(result);
+                DEBUG_CONSOLE_PRINT("E: ");
+                DEBUG_CONSOLE_PRINTLN(result);
             }
         }
         NVIC_DISABLE_IRQ(IRQ_USBOTG);
@@ -199,8 +149,8 @@ void handle_auth() {
         result = RealDS4.SetReport(0, 0, 0x03, 0xf0, sizeof(ds4_auth_t), (uint8_t *) DS4.authGetChallenge());
         NVIC_ENABLE_IRQ(IRQ_PIT);
         if (result) {
-            Serial1.print("E: ");
-            Serial1.println(result);
+            DEBUG_CONSOLE_PRINT("E: ");
+            DEBUG_CONSOLE_PRINTLN(result);
         }
         NVIC_ENABLE_IRQ(IRQ_USBOTG);
 
@@ -210,23 +160,23 @@ void handle_auth() {
         LCD.print("W");
         lcd_disp = true;
         ts = millis();
-        Serial1.println("I: authChallengeSent");
+        DEBUG_CONSOLE_PRINTLN("I: authChallengeSent");
         NVIC_DISABLE_IRQ(IRQ_PIT);
         result = RealDS4.GetReport(0, 0, 0x03, 0xf2, sizeof(ds4_auth_result_t), (uint8_t *) &tmp_auth_result);
         NVIC_ENABLE_IRQ(IRQ_PIT);
         if (result) {
-            Serial1.print("E: ");
-            Serial1.println(result);
+            DEBUG_CONSOLE_PRINT("E: ");
+            DEBUG_CONSOLE_PRINTLN(result);
         }
         if (tmp_auth_result.status == 0x00) {
-            Serial1.println("I: RealDS4 ok");
+            DEBUG_CONSOLE_PRINTLN("I: RealDS4 ok");
             NVIC_DISABLE_IRQ(IRQ_USBOTG);
             NVIC_DISABLE_IRQ(IRQ_PIT);
             result = RealDS4.GetReport(0, 0, 0x03, 0xf1, sizeof(ds4_auth_t), (uint8_t *) DS4.authGetResponseBuffer());
             NVIC_ENABLE_IRQ(IRQ_PIT);
             if (result) {
-                Serial1.print("E: ");
-                Serial1.println(result);
+                DEBUG_CONSOLE_PRINT("E: ");
+                DEBUG_CONSOLE_PRINTLN(result);
             }
             DS4.authSetBufferedFlag();
             NVIC_ENABLE_IRQ(IRQ_USBOTG);
@@ -237,7 +187,7 @@ void handle_auth() {
         LCD.print("R");
         lcd_disp = true;
         ts = millis();
-        Serial1.println("I: authResponseAvailable");
+        DEBUG_CONSOLE_PRINTLN("I: authResponseAvailable");
         NVIC_DISABLE_IRQ(IRQ_USBOTG);
         NVIC_DISABLE_IRQ(IRQ_PIT);
         RealDS4.GetReport(0, 0, 0x03, 0xf1, sizeof(ds4_auth_t), (uint8_t *) DS4.authGetResponseBuffer());
@@ -279,16 +229,18 @@ void handle_touchpad_atrf(uint8_t pos1, uint8_t pos2) {
         stick_hold_frames = 0;
         if (pos1 != POS_FLOAT) {
             // Map both points to pos1
-            // TODO what if moving towards different direction?
+            // TODO what if 2 points are moving towards different directions?
             DS4.setTouchPos1(map(pos1, POS_MIN, POS_MAX, 0, 1919), 314);
             DS4.setTouchPos2(map(pos1, POS_MIN, POS_MAX, 0, 1919), 628);
         } else {
             DS4.releaseTouchAll();
         }
     } else {
+        // immediately release touchpad
+        DS4.releaseTouchAll();
         // if slider is being touched
         if (pos1 != POS_FLOAT) {
-            // and we can check for direction
+            // and we can determine the direction
             if (pos1_prev != POS_FLOAT) {
                 // left
                 if (pos1 < pos1_prev) {
@@ -500,12 +452,12 @@ void handle_ds4_pass(void) {
 void _scan_all() {
     scan_buttons();
     scan_touchpad();
-    if (controller_settings.perf_ctr) vps++;
+    if (controller_settings.perf_ctr) sps++;
 }
 
 void setup() {
-    Serial1.begin(115200);
-    Serial1.println("I: Hello");
+    DEBUG_CONSOLE_INIT();
+    DEBUG_CONSOLE_PRINTLN("I: Hello");
 
     pinMode(QEI_SW, INPUT_PULLUP);
     if (digitalRead(QEI_SW) == LOW) {
@@ -528,12 +480,12 @@ void setup() {
     digitalWrite(BTN_CSB, HIGH);
 
     SPI.begin();
-    Serial1.println("I: init usb");
+    DEBUG_CONSOLE_PRINTLN("I: init usb");
     DS4.begin();
 
-    Serial1.println("I: init usbh");
+    DEBUG_CONSOLE_PRINTLN("I: init usbh");
     if (USBH.Init() == -1) {
-        Serial1.println("F: timeout waiting for usbh");
+        DEBUG_CONSOLE_PRINTLN("F: timeout waiting for usbh");
         while (1);
     }
 
@@ -563,7 +515,7 @@ void setup() {
         LCD.print("DP");
     }
 
-    Scan.begin(_scan_all, SCAN_INTERVAL * 1000);
+    Scan.begin(_scan_all, SCAN_INTERVAL_US);
 }
 
 void loop() {
@@ -595,9 +547,9 @@ void loop() {
         LCD.setCursor(0, 0);
         LCD.print(fps);
         LCD.setCursor(8, 0);
-        LCD.print(vps);
+        LCD.print(sps);
         fps = 0;
-        vps = 0;
+        sps = 0;
         NVIC_ENABLE_IRQ(IRQ_PIT);
     }
 }
