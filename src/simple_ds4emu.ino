@@ -41,6 +41,10 @@ public:
             ) \
         ));
     }
+
+    bool isLicensed(void) {
+        return HIDUniversal::VID != PS4_VID;
+    }
 };
 
 USB USBH;
@@ -153,6 +157,7 @@ void scan_dpad() {
 void handle_auth() {
     static bool lcd_disp = false;
     static uint32_t ts = 0;
+    uint8_t reset_buffer[8];
 
     if (!RealDS4.connected()) {
         // Display warning and latches on until DS4 is available
@@ -179,7 +184,16 @@ void handle_auth() {
         lcd_disp = true;
         ts = millis();
         Serial1.println("I: authChallengeAvailable");
-
+        if (RealDS4.isLicensed() && DS4.authGetChallenge()->page == 0) {
+            Serial1.println("I: licensed controller, resetting");
+            NVIC_DISABLE_IRQ(IRQ_PIT);
+            result = RealDS4.GetReport(0, 0, 0x03, 0xf3, sizeof(reset_buffer), reset_buffer);
+            NVIC_ENABLE_IRQ(IRQ_PIT);
+            if (result) {
+                Serial1.print("E: ");
+                Serial1.println(result);
+            }
+        }
         NVIC_DISABLE_IRQ(IRQ_USBOTG);
         NVIC_DISABLE_IRQ(IRQ_PIT);
         result = RealDS4.SetReport(0, 0, 0x03, 0xf0, sizeof(ds4_auth_t), (uint8_t *) DS4.authGetChallenge());
