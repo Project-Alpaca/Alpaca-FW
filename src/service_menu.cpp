@@ -1,3 +1,7 @@
+#ifndef TP_RESISTIVE
+#define TP_RESISTIVE
+#endif
+
 #include <Arduino.h>
 #include <SPI.h>
 #include <Encoder.h>
@@ -6,6 +10,7 @@
 #include <ResponsiveAnalogRead.h>
 
 #include "service_menu.h"
+#include "service_menu_strings.h"
 #include "common_objs.h"
 #include "settings.h"
 #include "constants.h"
@@ -24,10 +29,6 @@ MD_Menu::value_t *handle_bool(MD_Menu::mnuId_t id, bool get);
 MD_Menu::value_t menu_buf;
 static uint8_t curr_button = 0;
 
-#ifndef TP_RESISTIVE
-#define TP_RESISTIVE
-#endif
-
 const int MENU_TP_MIN = 100;
 
 #ifdef TP_RESISTIVE
@@ -35,34 +36,34 @@ const int MENU_TP_MAX = 101;
 #endif
 
 const MD_Menu::mnuHeader_t menus[] = {
-    {10, "Service Menu", 10, 19, 0},
-    {11, "Reboot", 20, 21, 0},
-    {12, "Button Config", 31, 32, 0},
-    {20, "TP Sys. Cfg", MENU_TP_MIN, MENU_TP_MAX, 0},
+    {10, STR_HDR_SERVICE_MENU, 10, 19, 0},
+    {11, STR_HDR_REBOOT, 20, 21, 0},
+    {12, STR_HDR_BUTTON_CONFIG, 31, 32, 0},
+    {20, STR_HDR_TP_SYS_CFG, MENU_TP_MIN, MENU_TP_MAX, 0},
 };
 
 const MD_Menu::mnuItem_t menu_items[] = {
-    {10, "Button Test", MD_Menu::MNU_INPUT, 10},
-    {11, "TP Test", MD_Menu::MNU_INPUT, 11},
-    {12, "TP Mode", MD_Menu::MNU_INPUT, 13},
-    {13, "Button Conf...", MD_Menu::MNU_MENU, 12},
-    {14, "TP Sys. Cfg...", MD_Menu::MNU_MENU, 20},
-    {15, "TP+A Hold Frm.", MD_Menu::MNU_INPUT, 19},
-    {16, "DS4 Redir.", MD_Menu::MNU_INPUT, 16},
-    {17, "Show PerfCtr.", MD_Menu::MNU_INPUT, 17},
-    {18, "Clear EEPROM", MD_Menu::MNU_INPUT, 18},
-    {19, "Reboot...", MD_Menu::MNU_MENU, 11},
+    {10, STR_ITM_BTN_TEST, MD_Menu::MNU_INPUT, 10},
+    {11, STR_ITM_TP_TEST, MD_Menu::MNU_INPUT, 11},
+    {12, STR_ITM_TP_MODE, MD_Menu::MNU_INPUT, 13},
+    {13, STR_ITM_BTN_CONF, MD_Menu::MNU_MENU, 12},
+    {14, STR_ITM_TP_SYS_CFG, MD_Menu::MNU_MENU, 20},
+    {15, STR_ITM_HOLD_FRAME, MD_Menu::MNU_INPUT, 19},
+    {16, STR_ITM_DS4_REDIR, MD_Menu::MNU_INPUT, 16},
+    {17, STR_ITM_PERF_CTR, MD_Menu::MNU_INPUT, 17},
+    {18, STR_ITM_CLR_EEPROM, MD_Menu::MNU_INPUT, 18},
+    {19, STR_ITM_REBOOT, MD_Menu::MNU_MENU, 11},
 
-    {20, "Main System", MD_Menu::MNU_INPUT, 20}, // action 20 resets the MCU
-    {21, "Bootloader", MD_Menu::MNU_INPUT, 21}, // action 21 reboots into bootloader
+    {20, STR_ITM_REBOOT_MAIN, MD_Menu::MNU_INPUT, 20}, // action 20 resets the MCU
+    {21, STR_ITM_REBOOT_BL, MD_Menu::MNU_INPUT, 21}, // action 21 reboots into bootloader
 
     //{30, "Source", MD_Menu::MNU_INPUT, 30},
-    {31, "ID", MD_Menu::MNU_INPUT, 31},
-    {32, "Assignment", MD_Menu::MNU_INPUT, 32},
+    {31, STR_ITM_BTNCFG_ID, MD_Menu::MNU_INPUT, 31},
+    {32, STR_ITM_BTNCFG_ASSIGN, MD_Menu::MNU_INPUT, 32},
 
 #ifdef TP_RESISTIVE
-    {100, "TP Calibration", MD_Menu::MNU_INPUT, 12}, // action 12 runs the calibration function
-    {101, "TP ADC Zero", MD_Menu::MNU_INPUT, 15},
+    {100, STR_ITM_TPSYS_CALIB, MD_Menu::MNU_INPUT, 12}, // action 12 runs the calibration function
+    {101, STR_ITM_TPSYS_CALIB_ADC, MD_Menu::MNU_INPUT, 15},
 #endif
 };
 
@@ -70,19 +71,19 @@ const char BUTTON_NAMES[] = "NUL|U|L|D|R|SQR|XRO|CIR|TRI|L1|R1|L2|R2|SHR|OPT|L3|
 const char TP_MODES[] = TP_MODE_TP_N "|" TP_MODE_DPAD_N "|" TP_MODE_LR_N "|" TP_MODE_TP_C_N "|" TP_MODE_TP_A_N "|" TP_MODE_ATRF_N;
 
 const MD_Menu::mnuInput_t menu_actions[] = {
-    {10, "Press SEL", MD_Menu::INP_RUN, io_test_wrapper, 0, 0, 0, 0, 0, 0, nullptr},
-    {11, "Press SEL", MD_Menu::INP_RUN, io_test_wrapper, 0, 0, 0, 0, 0, 0, nullptr},
-    {12, "Press SEL", MD_Menu::INP_RUN, tp_calib_wrapper, 0, 0, 0, 0, 0, 0, nullptr},
-    {13, "Mode", MD_Menu::INP_LIST, handle_list, 4, 0, 0, 0, 0, 0, TP_MODES},
-    {15, "Thres.", MD_Menu::INP_INT, handle_int, 4, 0, 0, 1023, 0, 10, nullptr},
-    {16, "Y/N", MD_Menu::INP_BOOL, handle_bool, 1, 0, 0, 0, 0, 0, nullptr},
-    {17, "Y/N", MD_Menu::INP_BOOL, handle_bool, 1, 0, 0, 0, 0, 0, nullptr},
-    {18, "Clear EEPROM?", MD_Menu::INP_RUN, clear_eeprom_wrapper, 0, 0, 0, 0, 0, 0, nullptr},
-    {19, "Hold Frame", MD_Menu::INP_INT, handle_int, 3, 0, 0, 255, 0, 10, nullptr},
-    {20, "Restart?", MD_Menu::INP_RUN, reboot_wrapper, 0, 0, 0, 0, 0, 0, nullptr},
-    {21, "Reboot to BL?", MD_Menu::INP_RUN, reboot_wrapper, 0, 0, 0, 0, 0, 0, nullptr},
-    {31, "ID", MD_Menu::INP_INT, handle_int, 2, 0, 0, 15, 0, 10, nullptr},
-    {32, "Btn.", MD_Menu::INP_LIST, handle_list, 3, 0, 0, 0, 0, 0, BUTTON_NAMES}
+    {10, STR_CFM_PRESS_SEL, MD_Menu::INP_RUN, io_test_wrapper, 0, 0, 0, 0, 0, 0, nullptr},
+    {11, STR_CFM_PRESS_SEL, MD_Menu::INP_RUN, io_test_wrapper, 0, 0, 0, 0, 0, 0, nullptr},
+    {12, STR_CFM_PRESS_SEL, MD_Menu::INP_RUN, tp_calib_wrapper, 0, 0, 0, 0, 0, 0, nullptr},
+    {13, STR_CFM_MODE, MD_Menu::INP_LIST, handle_list, 4, 0, 0, 0, 0, 0, TP_MODES},
+    {15, STR_CFM_THRES, MD_Menu::INP_INT, handle_int, 4, 0, 0, 1023, 0, 10, nullptr},
+    {16, STR_CFM_YN, MD_Menu::INP_BOOL, handle_bool, 1, 0, 0, 0, 0, 0, nullptr},
+    {17, STR_CFM_YN, MD_Menu::INP_BOOL, handle_bool, 1, 0, 0, 0, 0, 0, nullptr},
+    {18, STR_CFM_CLR_EEPROM, MD_Menu::INP_RUN, clear_eeprom_wrapper, 0, 0, 0, 0, 0, 0, nullptr},
+    {19, STR_CFM_HOLD_FRAME, MD_Menu::INP_INT, handle_int, 3, 0, 0, 255, 0, 10, nullptr},
+    {20, STR_CFM_RESTART, MD_Menu::INP_RUN, reboot_wrapper, 0, 0, 0, 0, 0, 0, nullptr},
+    {21, STR_CFM_REBOOT_TO_BL, MD_Menu::INP_RUN, reboot_wrapper, 0, 0, 0, 0, 0, 0, nullptr},
+    {31, STR_CFM_ID, MD_Menu::INP_INT, handle_int, 2, 0, 0, 15, 0, 10, nullptr},
+    {32, STR_CFM_BTN, MD_Menu::INP_LIST, handle_list, 3, 0, 0, 0, 0, 0, BUTTON_NAMES}
 };
 
 MD_Menu TestMenu(
