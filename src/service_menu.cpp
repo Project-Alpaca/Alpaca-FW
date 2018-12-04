@@ -47,7 +47,7 @@ const MD_Menu::mnuItem_t menu_items[] = {
     {12, "TP Mode", MD_Menu::MNU_INPUT, 13},
     {13, "Button Conf...", MD_Menu::MNU_MENU, 12},
     {14, "TP Sys. Cfg...", MD_Menu::MNU_MENU, 20},
-    {15, "TP+A Hold Frm.", MD_Menu::MNU_INPUT, 19},
+    {15, "Stick Hold", MD_Menu::MNU_INPUT, 19},
     {16, "DS4 Redir.", MD_Menu::MNU_INPUT, 16},
     {17, "Show PerfCtr.", MD_Menu::MNU_INPUT, 17},
     {18, "Clear EEPROM", MD_Menu::MNU_INPUT, 18},
@@ -67,7 +67,7 @@ const MD_Menu::mnuItem_t menu_items[] = {
 };
 
 const char BUTTON_NAMES[] = "NUL|U|L|D|R|SQR|XRO|CIR|TRI|L1|R1|L2|R2|SHR|OPT|L3|R3|PS|TP";
-const char TP_MODES[] = TP_MODE_TP_N "|" TP_MODE_DPAD_N "|" TP_MODE_LR_N "|" TP_MODE_TP_C_N "|" TP_MODE_TP_A_N "|" TP_MODE_ATRF_N;
+const char TP_MODES[] = TP_MODE_TP_N "|" TP_MODE_DPAD_N "|" TP_MODE_LR_N "|" TP_MODE_TP_C_N "|" TP_MODE_ATRF_N;
 
 const MD_Menu::mnuInput_t menu_actions[] = {
     {10, "Press SEL", MD_Menu::INP_RUN, io_test_wrapper, 0, 0, 0, 0, 0, 0, nullptr},
@@ -78,7 +78,7 @@ const MD_Menu::mnuInput_t menu_actions[] = {
     {16, "Y/N", MD_Menu::INP_BOOL, handle_bool, 1, 0, 0, 0, 0, 0, nullptr},
     {17, "Y/N", MD_Menu::INP_BOOL, handle_bool, 1, 0, 0, 0, 0, 0, nullptr},
     {18, "Clear EEPROM?", MD_Menu::INP_RUN, clear_eeprom_wrapper, 0, 0, 0, 0, 0, 0, nullptr},
-    {19, "Hold Frame", MD_Menu::INP_INT, handle_int, 3, 0, 0, 255, 0, 10, nullptr},
+    {19, "Scans", MD_Menu::INP_INT, handle_int, 3, 0, 0, 255, 0, 10, nullptr},
     {20, "Restart?", MD_Menu::INP_RUN, reboot_wrapper, 0, 0, 0, 0, 0, 0, nullptr},
     {21, "Reboot to BL?", MD_Menu::INP_RUN, reboot_wrapper, 0, 0, 0, 0, 0, 0, nullptr},
     {31, "ID", MD_Menu::INP_INT, handle_int, 2, 0, 0, 15, 0, 10, nullptr},
@@ -368,7 +368,7 @@ MD_Menu::value_t *handle_list(MD_Menu::mnuId_t id, bool get) {
     switch (id) {
         case 13:
             if (get) {
-                menu_buf.value = controller_settings.default_tp_mode;
+                menu_buf.value = controller_settings.default_tp_mode % TP_NB_MODES;
             } else {
                 controller_settings.default_tp_mode = menu_buf.value;
                 settings_save(&controller_settings);
@@ -400,9 +400,9 @@ MD_Menu::value_t *handle_int(MD_Menu::mnuId_t id, bool get) {
             break;
         case 19:
             if (get) {
-                menu_buf.value = controller_settings.tp_a_hold;
+                menu_buf.value = controller_settings.stick_hold;
             } else {
-                controller_settings.tp_a_hold = menu_buf.value;
+                controller_settings.stick_hold = menu_buf.value;
                 settings_save(&controller_settings);
             }
             break;

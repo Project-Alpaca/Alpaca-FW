@@ -13,7 +13,7 @@ typedef struct {
     uint8_t default_tp_mode;
     bool ds4_passthrough;
     bool perf_ctr;
-    uint8_t tp_a_hold;
+    uint8_t stick_hold;
     uint32_t crc32;
 } __attribute__((packed)) settings_t;
 

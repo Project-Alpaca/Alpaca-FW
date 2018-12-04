@@ -12,7 +12,7 @@ void settings_init(settings_t *settings) {
     memset(&settings->button_mapping, 0x00, 16 * sizeof(uint8_t));
     settings->ds4_passthrough = false;
     settings->perf_ctr = false;
-    settings->tp_a_hold = 12; // ~3 DS4 frames
+    settings->stick_hold = 24;
     settings->crc32 = 0;
 }
 

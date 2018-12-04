@@ -265,9 +265,9 @@ void handle_touchpad_atrf(uint8_t pos1, uint8_t pos2) {
                 }
             }
         }
-        // check if direction changes. If so, reset frame counter
+        // check if direction updates. If so, reset frame counter
         if (dir_changed) {
-            stick_hold_frames = 24;
+            stick_hold_frames = controller_settings.stick_hold;
             released = false;
         }
     }
@@ -369,9 +369,6 @@ void redraw_tp_mode(void) {
             break;
         case TP_MODE_TP_C:
             LCD.print(TP_MODE_TP_C_N);
-            break;
-        case TP_MODE_TP_A:
-            LCD.print(TP_MODE_TP_A_N);
             break;
         case TP_MODE_ATRF:
             LCD.print(TP_MODE_ATRF_N);
@@ -504,7 +501,7 @@ void setup() {
     SoftPotMagic.setCalib(&(controller_settings.tp_calib));
     SoftPotMagic.setMinGapRatio(.10f);
 
-    tp_mode = controller_settings.default_tp_mode;
+    tp_mode = controller_settings.default_tp_mode % TP_NB_MODES;
 
     LCD.begin(16, 2);
     LCD.clear();
