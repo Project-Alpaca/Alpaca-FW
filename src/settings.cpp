@@ -13,6 +13,8 @@ void settings_init(settings_t *settings) {
     settings->ds4_passthrough = false;
     settings->perf_ctr = false;
     settings->stick_hold = 24;
+    settings->max_segs = 20;
+    settings->seg_mult = true;
     settings->crc32 = 0;
 }
 

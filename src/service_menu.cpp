@@ -35,23 +35,25 @@ const int MENU_TP_MAX = 101;
 #endif
 
 const MD_Menu::mnuHeader_t menus[] = {
-    {10, "Service Menu", 10, 19, 0},
+    // id desc lower_item upper_item curr_item
+    {10, "Service Menu", 10, 17, 0},
     {11, "Reboot", 20, 21, 0},
     {12, "Button Config", 31, 32, 0},
-    {20, "TP Sys. Cfg", MENU_TP_MIN, MENU_TP_MAX, 0},
+    {13, "I/O Test", 40, 41, 0},
+    {14, "TP Config", 50, 53, 0},
+    {20, "TP SysConf", MENU_TP_MIN, MENU_TP_MAX, 0},
 };
 
 const MD_Menu::mnuItem_t menu_items[] = {
-    {10, "Button Test", MD_Menu::MNU_INPUT, 10},
-    {11, "TP Test", MD_Menu::MNU_INPUT, 11},
-    {12, "TP Mode", MD_Menu::MNU_INPUT, 13},
-    {13, "Button Conf...", MD_Menu::MNU_MENU, 12},
-    {14, "TP Sys. Cfg...", MD_Menu::MNU_MENU, 20},
-    {15, "Stick Hold", MD_Menu::MNU_INPUT, 19},
-    {16, "DS4 Redir.", MD_Menu::MNU_INPUT, 16},
-    {17, "Show PerfCtr.", MD_Menu::MNU_INPUT, 17},
-    {18, "Clear EEPROM", MD_Menu::MNU_INPUT, 18},
-    {19, "Reboot...", MD_Menu::MNU_MENU, 11},
+    // id desc item_type item_id
+    {10, "I/O Test...", MD_Menu::MNU_MENU, 13},
+    {11, "Button Conf...", MD_Menu::MNU_MENU, 12},
+    {12, "TP Conf...", MD_Menu::MNU_MENU, 14},
+    {13, "TP SysConf...", MD_Menu::MNU_MENU, 20},
+    {14, "DS4 Redir.", MD_Menu::MNU_INPUT, 16},
+    {15, "Show PerfCtr.", MD_Menu::MNU_INPUT, 17},
+    {16, "Clear EEPROM", MD_Menu::MNU_INPUT, 18},
+    {17, "Reboot...", MD_Menu::MNU_MENU, 11},
 
     {20, "Main System", MD_Menu::MNU_INPUT, 20}, // action 20 resets the MCU
     {21, "Bootloader", MD_Menu::MNU_INPUT, 21}, // action 21 reboots into bootloader
@@ -60,6 +62,13 @@ const MD_Menu::mnuItem_t menu_items[] = {
     {31, "ID", MD_Menu::MNU_INPUT, 31},
     {32, "Assignment", MD_Menu::MNU_INPUT, 32},
 
+    {40, "Button Test", MD_Menu::MNU_INPUT, 10},
+    {41, "TP Test", MD_Menu::MNU_INPUT, 11},
+
+    {50, "TP Mode", MD_Menu::MNU_INPUT, 13},
+    {51, "ATRF Hold", MD_Menu::MNU_INPUT, 19},
+    {52, "ATRF MaxSeg", MD_Menu::MNU_INPUT, 40},
+    {53, "ATRF SegMult", MD_Menu::MNU_INPUT, 41},
 #ifdef TP_RESISTIVE
     {100, "TP Calibration", MD_Menu::MNU_INPUT, 12}, // action 12 runs the calibration function
     {101, "TP ADC Zero", MD_Menu::MNU_INPUT, 15},
@@ -70,6 +79,7 @@ const char BUTTON_NAMES[] = "NUL|U|L|D|R|SQR|XRO|CIR|TRI|L1|R1|L2|R2|SHR|OPT|L3|
 const char TP_MODES[] = TP_MODE_TP_N "|" TP_MODE_DPAD_N "|" TP_MODE_LR_N "|" TP_MODE_TP_C_N "|" TP_MODE_ATRF_N;
 
 const MD_Menu::mnuInput_t menu_actions[] = {
+    // id desc type handler field_size lower_n lower_e upper_n upper_e list_items
     {10, "Press SEL", MD_Menu::INP_RUN, io_test_wrapper, 0, 0, 0, 0, 0, 0, nullptr},
     {11, "Press SEL", MD_Menu::INP_RUN, io_test_wrapper, 0, 0, 0, 0, 0, 0, nullptr},
     {12, "Press SEL", MD_Menu::INP_RUN, tp_calib_wrapper, 0, 0, 0, 0, 0, 0, nullptr},
@@ -82,7 +92,9 @@ const MD_Menu::mnuInput_t menu_actions[] = {
     {20, "Restart?", MD_Menu::INP_RUN, reboot_wrapper, 0, 0, 0, 0, 0, 0, nullptr},
     {21, "Reboot to BL?", MD_Menu::INP_RUN, reboot_wrapper, 0, 0, 0, 0, 0, 0, nullptr},
     {31, "ID", MD_Menu::INP_INT, handle_int, 2, 0, 0, 15, 0, 10, nullptr},
-    {32, "Btn.", MD_Menu::INP_LIST, handle_list, 3, 0, 0, 0, 0, 0, BUTTON_NAMES}
+    {32, "Btn.", MD_Menu::INP_LIST, handle_list, 3, 0, 0, 0, 0, 0, BUTTON_NAMES},
+    {40, "Segments", MD_Menu::INP_INT, handle_int, 2, 1, 0, 20, 0, 10, nullptr},
+    {41, "Multiplier", MD_Menu::INP_INT, handle_int, 2, 1, 0, 2, 0, 10, nullptr},
 };
 
 MD_Menu TestMenu(
@@ -411,6 +423,23 @@ MD_Menu::value_t *handle_int(MD_Menu::mnuId_t id, bool get) {
                 menu_buf.value = curr_button & 0x0f;
             } else {
                 curr_button = menu_buf.value & 0x0f;
+            }
+            break;
+        // ATRF Max Segments
+        case 40:
+            if (get) {
+                menu_buf.value = controller_settings.max_segs;
+            } else {
+                controller_settings.max_segs = menu_buf.value;
+                settings_save(&controller_settings);
+            }
+            break;
+        // ATRF Segment Multiplier
+        case 41:
+            if (get) {
+                menu_buf.value = controller_settings.seg_mult ? 2 : 1;
+            } else {
+                controller_settings.seg_mult = menu_buf.value == 2 ? true : false;
             }
             break;
         default:

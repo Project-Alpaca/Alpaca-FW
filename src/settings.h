@@ -3,7 +3,7 @@
 #include <EEPROM.h>
 #include <SoftPotMagic.h>
 
-#define SETTINGS_VER 0x0700af05
+#define SETTINGS_VER 0x0800af05
 
 typedef struct {
     uint32_t magic_ver;
@@ -14,6 +14,8 @@ typedef struct {
     bool ds4_passthrough;
     bool perf_ctr;
     uint8_t stick_hold;
+    uint8_t max_segs;
+    bool seg_mult;
     uint32_t crc32;
 } __attribute__((packed)) settings_t;
 

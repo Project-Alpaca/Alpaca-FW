@@ -220,6 +220,7 @@ void handle_touchpad_atrf(uint8_t pos1, uint8_t pos2) {
     static uint8_t pos1_prev = POS_FLOAT, pos2_prev = POS_FLOAT;
     static uint8_t stick_hold_frames = 0;
     static bool released = true;
+    static const int16_t tp_max = ATRF_SEG_WIDTH * controller_settings.max_segs - 1;
 
     bool is_long_slider = (DS4.getRumbleStrengthRight() > 0);
     bool dir_changed = false;
@@ -230,8 +231,10 @@ void handle_touchpad_atrf(uint8_t pos1, uint8_t pos2) {
         if (pos1 != POS_FLOAT) {
             // Map both points to pos1
             // TODO what if 2 points are moving towards different directions?
-            DS4.setTouchPos1(map(pos1, POS_MIN, POS_MAX, 0, 1919), 314);
-            DS4.setTouchPos2(map(pos1, POS_MIN, POS_MAX, 0, 1919), 628);
+            DS4.setTouchPos1(map(pos1, POS_MIN, POS_MAX, 0, tp_max), 314);
+            if (controller_settings.seg_mult) {
+                DS4.setTouchPos2(map(pos1, POS_MIN, POS_MAX, 0, tp_max), 628);
+            }
         } else {
             DS4.releaseTouchAll();
         }

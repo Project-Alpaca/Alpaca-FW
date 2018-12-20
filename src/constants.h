@@ -54,4 +54,5 @@
 const SPISettings SPI596 = SPISettings(2000000, MSBFIRST, SPI_MODE0);
 const SPISettings SPI4021 = SPISettings(2000000, MSBFIRST, SPI_MODE0);
 
+const uint16_t ATRF_SEG_WIDTH = 96;
 #include "pin_config.h"
