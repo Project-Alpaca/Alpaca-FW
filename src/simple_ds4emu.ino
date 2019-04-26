@@ -1,11 +1,11 @@
+#include <AuthenticatorDS4.hpp>
+#include <ControllerDS4.hpp>
+#include <TransportDS4.hpp>
+
 #include <usbhub.h>
 #include <PS4USB.h>
 #include <SoftPotMagic.h>
 
-// Satisfy the IDE, which needs to see the include statment in the ino too.
-#ifdef dobogusinclude
-#include <spi4teensy3.h>
-#endif
 #include <SPI.h>
 #include <Encoder.h>
 #include <LiquidCrystal.h>
@@ -15,6 +15,8 @@
 #include "common_objs.h"
 #include "settings.h"
 #include "constants.h"
+
+using namespace rds4;
 
 // Debug info
 #if defined(DS4_DEBUG_INFO) && DS4_DEBUG_INFO == 1
@@ -29,47 +31,15 @@
 
 const uint32_t SCAN_INTERVAL_US = 1000;
 
-ds4_auth_result_t tmp_auth_result = {0};
-
-class PS4USB2 : public ::PS4USB {
-    public:
-        const uint16_t HORI_VID = 0x0f0d;
-        const uint16_t HORI_PID_MINI = 0x00ee;
-        const uint16_t RO_VID = 0x1430;
-        const uint16_t RO_PID_GHPS4 = 0x07bb;
-
-        PS4USB2(USB *p) : ::PS4USB(p) {};
-        bool connected() {
-            uint16_t v = ::HIDUniversal::VID;
-            uint16_t p = ::HIDUniversal::PID;
-            return ::HIDUniversal::isReady() and this->VIDPIDOK(v, p);
-        }
-
-        bool isLicensed(void) {
-            return ::HIDUniversal::VID != PS4_VID;
-        }
-    protected:
-        virtual bool VIDPIDOK(uint16_t vid, uint16_t pid) {
-            return (( \
-                vid == PS4_VID and ( \
-                    pid == PS4_PID or \
-                    pid == PS4_PID_SLIM \
-                )
-            ) or ( \
-                vid == PS4USB2::HORI_VID and ( \
-                    pid == PS4USB2::HORI_PID_MINI \
-                ) \
-            ) or ( \
-                vid == PS4USB2::RO_VID and ( \
-                    pid == PS4USB2::RO_PID_GHPS4 \
-                ) \
-            ));
-        }
-};
-
 USB USBH;
 USBHub Hub1(&USBH);
 PS4USB2 RealDS4(&USBH);
+
+AuthenticatorDS4USBH DS4A(&RealDS4);
+TransportDS4Teensy DS4T(&RealDS4A);
+ControllerDS4 DS4(&DS4T);
+
+// TODO use EventResponder with non-interrupt event instead of timer-based event?
 IntervalTimer Scan;
 
 const uint8_t DPAD_MAP[4] = {6, 7, 14, 15}; // ULDR
@@ -80,7 +50,7 @@ uint8_t tp_mode;
 // Scans-per-second conter
 volatile uint16_t sps = 0;
 
-void scan_buttons() {
+static inline void scan_buttons() {
     uint8_t lamps_new;
 
     digitalWrite(BTN_CSB, LOW);
@@ -102,6 +72,7 @@ void scan_buttons() {
         lamps = lamps_new;
     }
 
+    // TODO
     for (uint8_t i=0; i<16; i++) {
         if (ISBTN(controller_settings.button_mapping[i])) {
             if (!(buttons & (1 << i))) {
@@ -110,99 +81,6 @@ void scan_buttons() {
                 DS4.releaseButton(BTN2DS4(controller_settings.button_mapping[i]));
             }
         }
-    }
-}
-
-void handle_auth() {
-    static bool lcd_disp = false;
-    static uint32_t ts = 0;
-    uint8_t reset_buffer[8];
-
-    if (!RealDS4.connected()) {
-        // Display warning and latches on until DS4 is available
-        if (!lcd_disp) {
-            LCD.setCursor(8, 1);
-            LCD.print("!");
-            lcd_disp = true;
-            ts = millis();
-        }
-        return;
-    }
-
-    int result;
-    if (lcd_disp && millis() - ts >= 250) {
-        LCD.setCursor(8, 1);
-        LCD.print(" ");
-        lcd_disp = false;
-    }
-
-    // PS4 is spitting nonsense
-    if (DS4.authChallengeAvailable()) {
-        LCD.setCursor(8, 1);
-        LCD.print("Q");
-        lcd_disp = true;
-        ts = millis();
-        DEBUG_CONSOLE_PRINTLN("I: authChallengeAvailable");
-        if (RealDS4.isLicensed() && DS4.authGetChallenge()->page == 0) {
-            DEBUG_CONSOLE_PRINTLN("I: licensed controller, resetting");
-            NVIC_DISABLE_IRQ(IRQ_PIT);
-            result = RealDS4.GetReport(0, 0, 0x03, 0xf3, sizeof(reset_buffer), reset_buffer);
-            NVIC_ENABLE_IRQ(IRQ_PIT);
-            if (result) {
-                DEBUG_CONSOLE_PRINT("E: ");
-                DEBUG_CONSOLE_PRINTLN(result);
-            }
-        }
-        NVIC_DISABLE_IRQ(IRQ_USBOTG);
-        NVIC_DISABLE_IRQ(IRQ_PIT);
-        result = RealDS4.SetReport(0, 0, 0x03, 0xf0, sizeof(ds4_auth_t), (uint8_t *) DS4.authGetChallenge());
-        NVIC_ENABLE_IRQ(IRQ_PIT);
-        if (result) {
-            DEBUG_CONSOLE_PRINT("E: ");
-            DEBUG_CONSOLE_PRINTLN(result);
-        }
-        NVIC_ENABLE_IRQ(IRQ_USBOTG);
-
-    // PS4 is asking for trouble
-    } else if (DS4.authChallengeSent()) {
-        LCD.setCursor(8, 1);
-        LCD.print("W");
-        lcd_disp = true;
-        ts = millis();
-        DEBUG_CONSOLE_PRINTLN("I: authChallengeSent");
-        NVIC_DISABLE_IRQ(IRQ_PIT);
-        result = RealDS4.GetReport(0, 0, 0x03, 0xf2, sizeof(ds4_auth_result_t), (uint8_t *) &tmp_auth_result);
-        NVIC_ENABLE_IRQ(IRQ_PIT);
-        if (result) {
-            DEBUG_CONSOLE_PRINT("E: ");
-            DEBUG_CONSOLE_PRINTLN(result);
-        }
-        if (tmp_auth_result.status == 0x00) {
-            DEBUG_CONSOLE_PRINTLN("I: RealDS4 ok");
-            NVIC_DISABLE_IRQ(IRQ_USBOTG);
-            NVIC_DISABLE_IRQ(IRQ_PIT);
-            result = RealDS4.GetReport(0, 0, 0x03, 0xf1, sizeof(ds4_auth_t), (uint8_t *) DS4.authGetResponseBuffer());
-            NVIC_ENABLE_IRQ(IRQ_PIT);
-            if (result) {
-                DEBUG_CONSOLE_PRINT("E: ");
-                DEBUG_CONSOLE_PRINTLN(result);
-            }
-            DS4.authSetBufferedFlag();
-            NVIC_ENABLE_IRQ(IRQ_USBOTG);
-        }
-    // PS4 is blaming you for messing things up
-    } else if (DS4.authResponseAvailable()) {
-        LCD.setCursor(8, 1);
-        LCD.print("R");
-        lcd_disp = true;
-        ts = millis();
-        DEBUG_CONSOLE_PRINTLN("I: authResponseAvailable");
-        NVIC_DISABLE_IRQ(IRQ_USBOTG);
-        NVIC_DISABLE_IRQ(IRQ_PIT);
-        RealDS4.GetReport(0, 0, 0x03, 0xf1, sizeof(ds4_auth_t), (uint8_t *) DS4.authGetResponseBuffer());
-        NVIC_ENABLE_IRQ(IRQ_PIT);
-        DS4.authSetBufferedFlag();
-        NVIC_ENABLE_IRQ(IRQ_USBOTG);
     }
 }
 
@@ -225,6 +103,7 @@ void handle_touchpad_direct_mapping(uint8_t pos1, uint8_t pos2, bool click) {
     }
 }
 
+// TODO
 void handle_touchpad_atrf(uint8_t pos1, uint8_t pos2) {
     static uint8_t pos1_prev = POS_FLOAT, pos2_prev = POS_FLOAT;
     static uint8_t stick_hold_frames = 0;
@@ -294,6 +173,7 @@ void handle_touchpad_atrf(uint8_t pos1, uint8_t pos2) {
     pos2_prev = pos2;
 }
 
+// TODO
 void scan_touchpad(void) {
     uint8_t pos1 = POS_FLOAT, pos2 = POS_FLOAT;
     uint8_t tmpstate;
@@ -403,6 +283,7 @@ void handle_tp_mode_switch(void) {
     }
 }
 
+// TODO
 void handle_ds4_pass(void) {
     if (!RealDS4.connected()) return;
 
@@ -489,14 +370,15 @@ void setup() {
     digitalWrite(BTN_CSB, HIGH);
 
     SPI.begin();
-    DEBUG_CONSOLE_PRINTLN("I: init usb");
-    DS4.begin();
 
     DEBUG_CONSOLE_PRINTLN("I: init usbh");
     if (USBH.Init() == -1) {
         DEBUG_CONSOLE_PRINTLN("F: timeout waiting for usbh");
         while (1);
     }
+
+    DEBUG_CONSOLE_PRINTLN("I: init usb");
+    DS4.begin();
 
     digitalWrite(BTN_CSL, LOW);
     SPI.beginTransaction(SPI596);
@@ -534,17 +416,17 @@ void loop() {
 
     NVIC_DISABLE_IRQ(IRQ_PIT);
     USBH.Task();
+    DS4T.update();
     DS4.update();
     if (controller_settings.perf_ctr) {
-        if (DS4.sendAsync()) {
+        if (DS4.sendReport()) {
             fps++;
         }
     } else {
-        DS4.sendAsync();
+        DS4.sendReport();
     }
     NVIC_ENABLE_IRQ(IRQ_PIT);
 
-    handle_auth();
     handle_tp_mode_switch();
     if (controller_settings.ds4_passthrough) handle_ds4_pass();
 
