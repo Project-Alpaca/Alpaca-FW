@@ -1,161 +1,13 @@
-diff --git a/teensy3/InternalCRC32.cpp b/teensy3/InternalCRC32.cpp
-new file mode 100644
-index 0000000..ba628da
---- /dev/null
-+++ b/teensy3/InternalCRC32.cpp
-@@ -0,0 +1,58 @@
-+// CRC32 library by Christopher Baker, modified to integrate into teensy-ds4
-+
-+//
-+// Copyright (c) 2013 Christopher Baker <https://christopherbaker.net>
-+//
-+// SPDX-License-Identifier:	MIT
-+//
-+
-+
-+#include "InternalCRC32.h"
-+
-+// Conditionally use pgm memory if it is available.
-+
-+#if defined(PROGMEM)
-+    #define FLASH_PROGMEM PROGMEM
-+    #define FLASH_READ_DWORD(x) (pgm_read_dword_near(x))
-+#else
-+    #define FLASH_PROGMEM
-+    #define FLASH_READ_DWORD(x) (*(uint32_t*)(x))
-+#endif
-+
-+
-+static const uint32_t crc32_table[] FLASH_PROGMEM = {
-+    0x00000000, 0x1db71064, 0x3b6e20c8, 0x26d930ac,
-+    0x76dc4190, 0x6b6b51f4, 0x4db26158, 0x5005713c,
-+    0xedb88320, 0xf00f9344, 0xd6d6a3e8, 0xcb61b38c,
-+    0x9b64c2b0, 0x86d3d2d4, 0xa00ae278, 0xbdbdf21c
-+};
-+
-+
-+InternalCRC32::InternalCRC32()
-+{
-+    reset();
-+}
-+
-+
-+void InternalCRC32::reset()
-+{
-+    _state = ~0L;
-+}
-+
-+
-+void InternalCRC32::update(const uint8_t& data)
-+{
-+    // via http://forum.arduino.cc/index.php?topic=91179.0
-+    uint8_t tbl_idx = 0;
-+
-+    tbl_idx = _state ^ (data >> (0 * 4));
-+    _state = FLASH_READ_DWORD(crc32_table + (tbl_idx & 0x0f)) ^ (_state >> 4);
-+    tbl_idx = _state ^ (data >> (1 * 4));
-+    _state = FLASH_READ_DWORD(crc32_table + (tbl_idx & 0x0f)) ^ (_state >> 4);
-+}
-+
-+
-+uint32_t InternalCRC32::finalize() const
-+{
-+    return ~_state;
-+}
-diff --git a/teensy3/InternalCRC32.h b/teensy3/InternalCRC32.h
-new file mode 100644
-index 0000000..1aa8891
---- /dev/null
-+++ b/teensy3/InternalCRC32.h
-@@ -0,0 +1,79 @@
-+// CRC32 library by Christopher Baker, modified to integrate into teensy-ds4
-+
-+//
-+// Copyright (c) 2013 Christopher Baker <https://christopherbaker.net>
-+//
-+// SPDX-License-Identifier:	MIT
-+//
-+
-+
-+#pragma once
-+
-+
-+// The compiler doesn't like Arduino.h within the core teensy library, so use
-+// bare metal includes instead
-+#include <inttypes.h>
-+#include <string.h>
-+
-+
-+/// \brief A class for calculating the CRC32 checksum from arbitrary data.
-+/// \sa http://forum.arduino.cc/index.php?topic=91179.0
-+class InternalCRC32
-+{
-+public:
-+    /// \brief Initialize an empty CRC32 checksum.
-+    InternalCRC32();
-+
-+    /// \brief Reset the checksum claculation.
-+    void reset();
-+
-+    /// \brief Update the current checksum caclulation with the given data.
-+    /// \param data The data to add to the checksum.
-+    void update(const uint8_t& data);
-+
-+    /// \brief Update the current checksum caclulation with the given data.
-+    /// \tparam Type The data type to read.
-+    /// \param data The data to add to the checksum.
-+    template <typename Type>
-+    void update(const Type& data)
-+    {
-+        update(&data, 1);
-+    }
-+
-+    /// \brief Update the current checksum caclulation with the given data.
-+    /// \tparam Type The data type to read.
-+    /// \param data The array to add to the checksum.
-+    /// \param size Size of the array to add.
-+    template <typename Type>
-+    void update(const Type* data, size_t size)
-+    {
-+        size_t nBytes = size * sizeof(Type);
-+        const uint8_t* pData = (const uint8_t*)data;
-+
-+        for (size_t i = 0; i < nBytes; i++)
-+        {
-+            update(pData[i]);
-+        }
-+    }
-+
-+    /// \returns the caclulated checksum.
-+    uint32_t finalize() const;
-+
-+    /// \brief Calculate the checksum of an arbitrary data array.
-+    /// \tparam Type The data type to read.
-+    /// \param data A pointer to the data to add to the checksum.
-+    /// \param size The size of the data to add to the checksum.
-+    /// \returns the calculated checksum.
-+    template <typename Type>
-+    static uint32_t calculate(const Type* data, size_t size)
-+    {
-+        InternalCRC32 crc;
-+        crc.update(data, size);
-+        return crc.finalize();
-+    }
-+
-+private:
-+    /// \brief The internal checksum state.
-+    uint32_t _state = ~0L;
-+
-+};
 diff --git a/teensy3/WProgram.h b/teensy3/WProgram.h
-index e67de41..688d3a9 100644
+index e67de41..d07d6bb 100644
 --- a/teensy3/WProgram.h
 +++ b/teensy3/WProgram.h
-@@ -62,6 +62,7 @@
+@@ -62,6 +62,8 @@
  #include "usb_mtp.h"
  #include "usb_audio.h"
  #include "usb_touch.h"
 +#include "usb_ds4.h"
++#include "usb_ds4stub.h"
  #include "usb_undef.h" // do not allow usb_desc.h stuff to leak to user programs
  
  #include "WCharacter.h"
@@ -326,14 +178,14 @@ index 182ae6d..2070ca3 100644
          {0x0300, 0x0000, (const uint8_t *)&string0, 0},
          {0x0301, 0x0409, (const uint8_t *)&usb_string_manufacturer_name, 0},
 diff --git a/teensy3/usb_desc.h b/teensy3/usb_desc.h
-index 7aaacd3..4c27c3a 100644
+index 7aaacd3..fa0e485 100644
 --- a/teensy3/usb_desc.h
 +++ b/teensy3/usb_desc.h
 @@ -865,6 +865,44 @@ let me know?  http://forum.pjrc.com/forums/4-Suggestions-amp-Bug-Reports
    #define ENDPOINT14_CONFIG	ENDPOINT_TRANSMIT_ISOCHRONOUS
    #define ENDPOINT15_CONFIG	ENDPOINT_TRANSMIT_ONLY
  
-+#elif defined(USB_DS4)
++#elif defined(USB_DS4) || defined(USB_DS4STUB)
 +  #define VENDOR_ID		0x16C0
 +  // Looks like a unused PID within the 0474-04d7 range
 +  // See https://www.voti.nl/pids/
@@ -375,10 +227,10 @@ index 7aaacd3..4c27c3a 100644
  
  #ifdef USB_DESC_LIST_DEFINE
 diff --git a/teensy3/usb_dev.c b/teensy3/usb_dev.c
-index c484d93..4f5bc88 100644
+index c484d93..6dd7038 100644
 --- a/teensy3/usb_dev.c
 +++ b/teensy3/usb_dev.c
-@@ -387,12 +387,24 @@ static void usb_setup(void)
+@@ -387,12 +387,32 @@ static void usb_setup(void)
  #endif
  
  // TODO: this does not work... why?
@@ -391,10 +243,18 @@ index c484d93..4f5bc88 100644
  	  case 0x0A21: // HID SET_IDLE
  		break;
 +	  case 0x01A1: // HID GET_REPORT
-+#if defined(DS4_INTERFACE)
++#if defined(USB_DS4)
 +		// DS4: get feature report 0xf1, 0xf2 (getChallengeResponse, challengeResponseAvailable)
 +		if (!usb_ds4_on_get_report(&setup, usb_ds4_reply_buffer, &datalen)) {
 +			data = usb_ds4_reply_buffer;
++		} else {
++			endpoint0_stall();
++			return;
++		}
++#endif
++#if defined(USB_DS4STUB)
++		if (usb_ds4stub_on_get_report && !(*usb_ds4stub_on_get_report)(&setup, usb_ds4stub_reply_buffer, &datalen)) {
++			data = usb_ds4stub_reply_buffer;
 +		} else {
 +			endpoint0_stall();
 +			return;
@@ -405,43 +265,60 @@ index c484d93..4f5bc88 100644
  	  // case 0xC940:
  #endif
  
-@@ -626,6 +638,11 @@ static void usb_control(uint32_t stat)
+@@ -626,6 +646,18 @@ static void usb_control(uint32_t stat)
  		if (usb_audio_set_feature(&setup, buf)) {
  			endpoint0_transmit(NULL, 0);
  		}
 +#endif
 +#ifdef DS4_INTERFACE
++#ifdef USB_DS4
 +		if (setup.wRequestAndType == 0x0921) {
 +			usb_ds4_on_set_report(&setup, buf);
 +		}
++#endif
++#ifdef USB_DS4STUB
++		if (setup.wRequestAndType == 0x0921 && usb_ds4stub_on_set_report) {
++			(*usb_ds4stub_on_set_report)(&setup, buf);
++		}
++#endif
  #endif
  		// give the buffer back
  		b->desc = BDT_DESC(EP0_SIZE, DATA1);
 diff --git a/teensy3/usb_dev.h b/teensy3/usb_dev.h
-index 1233d7f..daf1c7c 100644
+index 1233d7f..63a0c98 100644
 --- a/teensy3/usb_dev.h
 +++ b/teensy3/usb_dev.h
-@@ -114,6 +114,11 @@ extern int usb_audio_set_feature(void *stp, uint8_t *buf);
+@@ -114,6 +114,20 @@ extern int usb_audio_set_feature(void *stp, uint8_t *buf);
  extern void usb_touchscreen_update_callback(void);
  #endif
  
-+#ifdef DS4_INTERFACE
++#if defined(DS4_INTERFACE) && defined(USB_DS4)
 +extern uint8_t usb_ds4_reply_buffer[];
 +extern int usb_ds4_on_set_report(void *setup_ptr, uint8_t *data);
 +extern int usb_ds4_on_get_report(void *setup_ptr, uint8_t *data, uint32_t *len);
++#endif
++
++#if defined(DS4_INTERFACE) && defined(USB_DS4STUB)
++typedef int usb_ds4stub_get_callback_t(void *setup_ptr, uint8_t *data, uint32_t *len);
++typedef int usb_ds4stub_set_callback_t(void *setup_ptr, uint8_t *data);
++
++extern uint8_t usb_ds4stub_reply_buffer[];
++extern usb_ds4stub_get_callback_t *usb_ds4stub_on_get_report;
++extern usb_ds4stub_set_callback_t *usb_ds4stub_on_set_report;
 +#endif
  
  #ifdef __cplusplus
  }
 diff --git a/teensy3/usb_ds4.cpp b/teensy3/usb_ds4.cpp
 new file mode 100644
-index 0000000..b495fcc
+index 0000000..495086f
 --- /dev/null
 +++ b/teensy3/usb_ds4.cpp
-@@ -0,0 +1,377 @@
+@@ -0,0 +1,374 @@
 +/* Teensyduino Core Library
 + * http://www.pjrc.com/teensy/
 + * Copyright (c) 2017 PJRC.COM, LLC.
++ * Copyright (c) 2018-2019 dogtopus
 + *
 + * Permission is hereby granted, free of charge, to any person obtaining
 + * a copy of this software and associated documentation files (the
@@ -475,9 +352,7 @@ index 0000000..b495fcc
 +#include "HardwareSerial.h"
 +#include <string.h> // for memcpy()
 +
-+#include "InternalCRC32.h"
-+
-+#ifdef DS4_INTERFACE
++#if defined(DS4_INTERFACE) && defined(USB_DS4)
 +#if F_CPU >= 20000000
 +
 +#define TX_PACKET_LIMIT 4
@@ -515,6 +390,8 @@ index 0000000..b495fcc
 +    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 +};
 +
++// Response when PS4 asks for resetting the security chip used in authentication
++// process.
 +static const uint8_t replay_report_0xf3[] = {
 +    0xf3, 0x00, 0x38, 0x38, 0x00, 0x00, 0x00, 0x00
 +};
@@ -527,7 +404,6 @@ index 0000000..b495fcc
 +static bool _auth_challenge_sent;
 +static bool _auth_response_available;
 +static bool _auth_response_buffered;
-+static InternalCRC32 _cksum;
 +
 +void usb_ds4_report_init(ds4_report_t *report) {
 +    memset(report, 0, sizeof(ds4_report_t));
@@ -607,19 +483,16 @@ index 0000000..b495fcc
 +                result->status = 0x00;
 +                _auth_challenge_sent = false;
 +            }
-+            _cksum.reset();
-+            _cksum.update((uint8_t *) result, sizeof(ds4_auth_result_t) - sizeof(uint32_t));
-+            result->crc32 = _cksum.finalize();
++            result->crc32 = 0;
 +            *len = sizeof(ds4_auth_result_t);
-+            _cksum.reset();
 +            break;
 +        case 0x0303: // licensedGetHWConfig
 +            debug_print("I: licensedGetHWConfig\n");
 +            memcpy(data, replay_report_0x03, sizeof(replay_report_0x03));
 +            *len = sizeof(replay_report_0x03);
 +            break;
-+        case 0x03f3: // licensedReport0xf3
-+            debug_print("I: licensedReport0xf3\n");
++        case 0x03f3: // licensedResetAuth
++            debug_print("I: licensedResetAuth\n");
 +            memcpy(data, replay_report_0xf3, sizeof(replay_report_0xf3));
 +            *len = sizeof(replay_report_0xf3);
 +            break;
@@ -818,13 +691,14 @@ index 0000000..b495fcc
 +#endif // DS4_INTERFACE
 diff --git a/teensy3/usb_ds4.h b/teensy3/usb_ds4.h
 new file mode 100644
-index 0000000..87d5bf9
+index 0000000..b66591c
 --- /dev/null
 +++ b/teensy3/usb_ds4.h
-@@ -0,0 +1,379 @@
+@@ -0,0 +1,392 @@
 +/* Teensyduino Core Library
 + * http://www.pjrc.com/teensy/
 + * Copyright (c) 2017 PJRC.COM, LLC.
++ * Copyright (c) 2018-2019 dogtopus
 + *
 + * Permission is hereby granted, free of charge, to any person obtaining
 + * a copy of this software and associated documentation files (the
@@ -857,7 +731,7 @@ index 0000000..87d5bf9
 +
 +#include "usb_desc.h"
 +
-+#ifdef DS4_INTERFACE
++#if defined(DS4_INTERFACE) && defined(USB_DS4)
 +
 +#include <inttypes.h>
 +#include <string.h>
@@ -1011,7 +885,7 @@ index 0000000..87d5bf9
 +#define DS4_TOUCH_GET_ID(tp) (tp & 0x7f)
 +#define DS4_TOUCH_GET_X(tp) ((tp >> 8) & 0xfff)
 +#define DS4_TOUCH_GET_Y(tp) ((tp >> 20) & 0xfff)
-+#define DS4_TOUCH_RELEASE(tp) tp &= 0xffffff7f
++#define DS4_TOUCH_RELEASE(tp) tp |= 0x80
 +
 +#define DS4_TOUCH_POS_UNPACK(tp) \
 +    DS4_TOUCH_GET_STATE(tp), DS4_TOUCH_GET_ID(tp), DS4_TOUCH_GET_X(tp), DS4_TOUCH_GET_Y(tp)
@@ -1054,6 +928,7 @@ index 0000000..87d5bf9
 +        memset(&feedbackBuffer, 0, sizeof(ds4_feedback_t));
 +        pointCtr = 0;
 +    }
++
 +    bool send(bool async) {
 +        reportBuffer.sensor_timestamp = DS4_GET_SENSOR_TS();
 +        if (usb_ds4_send_report(&reportBuffer, async) == 0) {
@@ -1062,32 +937,35 @@ index 0000000..87d5bf9
 +        }
 +        return false;
 +    }
++
 +    bool send(void) {
 +        return send(false);
 +    }
++
 +    bool sendAsync(void) {
 +        return send(true);
 +    }
++
 +    void update(void) {
 +        usb_ds4_recv_feedback(&feedbackBuffer);
 +    }
++
 +    void pressButton(uint8_t buttonId) {
 +        DS4_BTN_SET(reportBuffer.buttons, buttonId);
 +    }
++
 +    void releaseButton(uint8_t buttonId) {
 +        DS4_BTN_CLR(reportBuffer.buttons, buttonId);
 +    }
++
 +    void releaseAllButton(void) {
 +        DS4_BTN_RESET(reportBuffer.buttons);
 +    }
++
 +    void pressDpad(uint8_t pos) {
 +        DS4_DPAD_SET(reportBuffer.buttons, pos);
-+        //serial_print("buttons: ");
-+        //serial_phex(reportBuffer.buttons[0]);
-+        //serial_phex(reportBuffer.buttons[1]);
-+        //serial_phex(reportBuffer.buttons[2]);
-+        //serial_print("\n");
 +    }
++
 +    void releaseDpad(void) {
 +        DS4_DPAD_SET(reportBuffer.buttons, DS4_DPAD_C);
 +    }
@@ -1100,6 +978,14 @@ index 0000000..87d5bf9
 +    void setRightAnalog(uint8_t x, uint8_t y) {
 +        reportBuffer.analog_r_x = x;
 +        reportBuffer.analog_r_y = y;
++    }
++
++    void setLeftTrigger(uint8_t val) {
++        reportBuffer.trigger_l = val;
++    }
++
++    void setRightTrigger(uint8_t val) {
++        reportBuffer.trigger_r = val;
 +    }
 +
 +    void setTouchPos1(uint16_t x, uint16_t y) {
@@ -1201,15 +1087,124 @@ index 0000000..87d5bf9
 +
 +#endif /* DS4_INTERFACE */
 +#endif /* __USB_DS4_H__ */
+diff --git a/teensy3/usb_ds4stub.c b/teensy3/usb_ds4stub.c
+new file mode 100644
+index 0000000..544fced
+--- /dev/null
++++ b/teensy3/usb_ds4stub.c
+@@ -0,0 +1,42 @@
++/* Teensyduino Core Library
++ * http://www.pjrc.com/teensy/
++ * Copyright (c) 2017 PJRC.COM, LLC.
++ * Copyright (c) 2019 dogtopus
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining
++ * a copy of this software and associated documentation files (the
++ * "Software"), to deal in the Software without restriction, including
++ * without limitation the rights to use, copy, modify, merge, publish,
++ * distribute, sublicense, and/or sell copies of the Software, and to
++ * permit persons to whom the Software is furnished to do so, subject to
++ * the following conditions:
++ *
++ * 1. The above copyright notice and this permission notice shall be
++ * included in all copies or substantial portions of the Software.
++ *
++ * 2. If the Software is incorporated into a build system that allows
++ * selection among a list of target devices, then similar target
++ * devices manufactured by PJRC.COM must be included in the list of
++ * target devices and selectable in the same manner.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
++ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
++ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
++ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
++ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
++ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
++ * SOFTWARE.
++ */
++
++#include "usb_ds4stub.h"
++
++#if defined(DS4_INTERFACE) && defined(USB_DS4STUB)
++#if F_CPU >= 20000000
++
++uint8_t usb_ds4stub_reply_buffer[64];
++usb_ds4stub_get_callback_t *usb_ds4stub_on_get_report = NULL;
++usb_ds4stub_set_callback_t *usb_ds4stub_on_set_report = NULL;
++
++#endif // F_CPU >= 20000000
++#endif // defined(DS4_INTERFACE) && defined(USB_DS4STUB)
+diff --git a/teensy3/usb_ds4stub.h b/teensy3/usb_ds4stub.h
+new file mode 100644
+index 0000000..391e99c
+--- /dev/null
++++ b/teensy3/usb_ds4stub.h
+@@ -0,0 +1,55 @@
++/* Teensyduino Core Library
++ * http://www.pjrc.com/teensy/
++ * Copyright (c) 2017 PJRC.COM, LLC.
++ * Copyright (c) 2019 dogtopus
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining
++ * a copy of this software and associated documentation files (the
++ * "Software"), to deal in the Software without restriction, including
++ * without limitation the rights to use, copy, modify, merge, publish,
++ * distribute, sublicense, and/or sell copies of the Software, and to
++ * permit persons to whom the Software is furnished to do so, subject to
++ * the following conditions:
++ *
++ * 1. The above copyright notice and this permission notice shall be
++ * included in all copies or substantial portions of the Software.
++ *
++ * 2. If the Software is incorporated into a build system that allows
++ * selection among a list of target devices, then similar target
++ * devices manufactured by PJRC.COM must be included in the list of
++ * target devices and selectable in the same manner.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
++ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
++ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
++ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
++ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
++ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
++ * SOFTWARE.
++ */
++
++#ifndef __USB_DS4STUB_H__
++#define __USB_DS4STUB_H__
++
++#include "usb_desc.h"
++
++#if defined(DS4_INTERFACE) && defined(USB_DS4STUB)
++
++#include <inttypes.h>
++
++#ifdef __cplusplus
++extern "C" {
++#endif
++typedef int usb_ds4stub_get_callback_t(void *setup_ptr, uint8_t *data, uint32_t *len);
++typedef int usb_ds4stub_set_callback_t(void *setup_ptr, uint8_t *data);
++
++extern uint8_t usb_ds4stub_reply_buffer[];
++extern usb_ds4stub_get_callback_t *usb_ds4stub_on_get_report;
++extern usb_ds4stub_set_callback_t *usb_ds4stub_on_set_report;
++#ifdef __cplusplus
++}
++#endif
++
++#endif /* DS4STUB_INTERFACE */
++#endif /* __USB_DS4STUB_H__ */
 diff --git a/teensy3/usb_inst.cpp b/teensy3/usb_inst.cpp
-index 224c13d..ff10f33 100644
+index 224c13d..71ef75e 100644
 --- a/teensy3/usb_inst.cpp
 +++ b/teensy3/usb_inst.cpp
 @@ -68,6 +68,10 @@ usb_joystick_class Joystick;
  uint8_t usb_joystick_class::manual_mode = 0;
  #endif
  
-+#ifdef DS4_INTERFACE
++#if defined(DS4_INTERFACE) && defined(USB_DS4)
 +usb_ds4_class DS4;
 +#endif
 +

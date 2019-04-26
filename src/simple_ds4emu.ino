@@ -31,31 +31,40 @@ const uint32_t SCAN_INTERVAL_US = 1000;
 
 ds4_auth_result_t tmp_auth_result = {0};
 
-const uint16_t HORI_VID = 0x0f0d;
-const uint16_t HORI_PID_MINI = 0x00ee;
+class PS4USB2 : public ::PS4USB {
+    public:
+        const uint16_t HORI_VID = 0x0f0d;
+        const uint16_t HORI_PID_MINI = 0x00ee;
+        const uint16_t RO_VID = 0x1430;
+        const uint16_t RO_PID_GHPS4 = 0x07bb;
 
-class PS4USB2: public PS4USB {
-public:
-    PS4USB2(USB *p) : PS4USB(p) {};
+        PS4USB2(USB *p) : ::PS4USB(p) {};
+        bool connected() {
+            uint16_t v = ::HIDUniversal::VID;
+            uint16_t p = ::HIDUniversal::PID;
+            return ::HIDUniversal::isReady() and this->VIDPIDOK(v, p);
+        }
 
-    bool connected() {
-        uint16_t v = HIDUniversal::VID;
-        uint16_t p = HIDUniversal::PID;
-        return HIDUniversal::isReady() && (( \
-            v == PS4_VID && ( \
-                p == PS4_PID || \
-                p == PS4_PID_SLIM \
-            )
-        ) || ( \
-            v == HORI_VID && ( \
-                p == HORI_PID_MINI \
-            ) \
-        ));
-    }
-
-    bool isLicensed(void) {
-        return HIDUniversal::VID != PS4_VID;
-    }
+        bool isLicensed(void) {
+            return ::HIDUniversal::VID != PS4_VID;
+        }
+    protected:
+        virtual bool VIDPIDOK(uint16_t vid, uint16_t pid) {
+            return (( \
+                vid == PS4_VID and ( \
+                    pid == PS4_PID or \
+                    pid == PS4_PID_SLIM \
+                )
+            ) or ( \
+                vid == PS4USB2::HORI_VID and ( \
+                    pid == PS4USB2::HORI_PID_MINI \
+                ) \
+            ) or ( \
+                vid == PS4USB2::RO_VID and ( \
+                    pid == PS4USB2::RO_PID_GHPS4 \
+                ) \
+            ));
+        }
 };
 
 USB USBH;
