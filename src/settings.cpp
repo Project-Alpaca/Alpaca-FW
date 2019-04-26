@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include <EEPROM.h>
-#include <InternalCRC32.h>
+#include <CRC32.h>
 #include <SoftPotMagic.h>
 #include "settings.h"
 
@@ -19,7 +19,7 @@ void settings_init(settings_t *settings) {
 }
 
 void settings_save(settings_t *settings) {
-    InternalCRC32 crc;
+    CRC32 crc;
     uint8_t *settings_wr = (uint8_t *) settings;
 
     crc.update(settings_wr, sizeof(settings_t)-sizeof(uint32_t));
@@ -33,7 +33,7 @@ void settings_save(settings_t *settings) {
 }
 
 void settings_load(settings_t *settings) {
-    InternalCRC32 crc;
+    CRC32 crc;
     uint8_t *settings_wr = (uint8_t *) settings;
 
     for (size_t i=0; i<sizeof(settings_t); i++) {
