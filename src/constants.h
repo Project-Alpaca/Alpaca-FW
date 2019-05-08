@@ -20,8 +20,9 @@
 #define TP_MODE_TP_C_N "TP+C"
 #define TP_MODE_ATRF_N "ATRF"
 
-#define BTN2DS4(map) (map - 1)
-#define ISBTN(map) (map >= BTN_SQR && map <= BTN_TP)
+// TODO remove those
+#define BTN2DS4(map) (map - 1 - 4)
+#define ISBTN(map) (map >= DS4.KEY_SQR+4 && map <= DS4.KEY_TP+4)
 #define ISDPAD(map) (map >= BTN_U && map <= BTN_R)
 
 #define BTN_NUL 0

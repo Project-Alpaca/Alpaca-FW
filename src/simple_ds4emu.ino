@@ -1,3 +1,4 @@
+#include <EventResponder.h>
 #include <AuthenticatorDS4.hpp>
 #include <ControllerDS4.hpp>
 #include <TransportDS4.hpp>
@@ -29,18 +30,18 @@ using namespace rds4;
     #define DEBUG_CONSOLE_PRINTLN(args) while (0) {}
 #endif
 
-const uint32_t SCAN_INTERVAL_US = 1000;
-
 USB USBH;
 USBHub Hub1(&USBH);
 PS4USB2 RealDS4(&USBH);
 
 AuthenticatorDS4USBH DS4A(&RealDS4);
-TransportDS4Teensy DS4T(&RealDS4A);
-ControllerDS4 DS4(&DS4T);
+TransportDS4Teensy DS4T(&DS4A);
+ControllerDS4SOCD<> DS4(&DS4T);
 
-// TODO use EventResponder with non-interrupt event instead of timer-based event?
-IntervalTimer Scan;
+EventResponder ScanEvent;
+EventResponder LCDPerfEvent;
+MillisTimer ScanTimer;
+MillisTimer LCDPerfTimer;
 
 const uint8_t DPAD_MAP[4] = {6, 7, 14, 15}; // ULDR
 
@@ -48,7 +49,8 @@ uint8_t lamps;
 uint16_t buttons;
 uint8_t tp_mode;
 // Scans-per-second conter
-volatile uint16_t sps = 0;
+static uint16_t sps = 0;
+static uint16_t fps = 0;
 
 static inline void scan_buttons() {
     uint8_t lamps_new;
@@ -74,32 +76,39 @@ static inline void scan_buttons() {
 
     // TODO
     for (uint8_t i=0; i<16; i++) {
+        // TODO this is hacked to work (for now). We need to find a way to refactor this.
         if (ISBTN(controller_settings.button_mapping[i])) {
             if (!(buttons & (1 << i))) {
-                DS4.pressButton(BTN2DS4(controller_settings.button_mapping[i]));
+                DS4.pressKey(BTN2DS4(controller_settings.button_mapping[i]));
             } else {
-                DS4.releaseButton(BTN2DS4(controller_settings.button_mapping[i]));
+                DS4.releaseKey(BTN2DS4(controller_settings.button_mapping[i]));
             }
         }
     }
 }
 
+// TODO
 void handle_touchpad_direct_mapping(uint8_t pos1, uint8_t pos2, bool click) {
     if (pos1 != POS_FLOAT) {
         if (click) {
-            DS4.pressButton(DS4_BTN_TOUCH);
+            // Touchpad keys does not have universal keycode.
+            DS4.pressKey(DS4.KEY_TP);
         }
-        DS4.setTouchPos1(map(pos1, POS_MIN, POS_MAX, 0, 1919), 471);
+        DS4.setTouchEvent(0, true, map(pos1, POS_MIN, POS_MAX, 0, 1919), 471);
+        //DS4.setTouchPos1(map(pos1, POS_MIN, POS_MAX, 0, 1919), 471);
         if (pos2 != POS_FLOAT) {
-            DS4.setTouchPos2(map(pos2, POS_MIN, POS_MAX, 0, 1919), 471);
+            DS4.setTouchEvent(1, true, map(pos2, POS_MIN, POS_MAX, 0, 1919), 471);
+            //DS4.setTouchPos2(map(pos2, POS_MIN, POS_MAX, 0, 1919), 471);
         } else {
-            DS4.releaseTouchPos2();
+            DS4.setTouchEvent(1, false);
+            //DS4.releaseTouchPos2();
         }
+        DS4.finalizeTouchEvent();
     } else {
         if (click) {
-            DS4.releaseButton(DS4_BTN_TOUCH);
+            DS4.releaseKey(DS4.KEY_TP);
         }
-        DS4.releaseTouchAll();
+        DS4.clearTouchEvents();
     }
 }
 
@@ -110,36 +119,39 @@ void handle_touchpad_atrf(uint8_t pos1, uint8_t pos2) {
     static bool released = true;
     static const int16_t tp_max = ATRF_SEG_WIDTH * controller_settings.max_segs - 1;
 
-    bool is_long_slider = (DS4.getRumbleStrengthRight() > 0);
+    bool is_chain_slide = (DS4.getRumbleIntensityRight() > 0);
     bool dir_changed = false;
 
-    if (is_long_slider) {
+    // Start fresh
+    DS4.clearTouchEvents();
+
+    if (is_chain_slide) {
         // immediately clear stick states
         stick_hold_frames = 0;
         if (pos1 != POS_FLOAT) {
             // Map both points to pos1
             // TODO what if 2 points are moving towards different directions?
-            DS4.setTouchPos1(map(pos1, POS_MIN, POS_MAX, 0, tp_max), 314);
+            DS4.setTouchEvent(0, true, map(pos1, POS_MIN, POS_MAX, 0, tp_max), 314);
             if (controller_settings.seg_mult) {
-                DS4.setTouchPos2(map(pos1, POS_MIN, POS_MAX, 0, tp_max), 628);
+                DS4.setTouchEvent(1, true, map(pos1, POS_MIN, POS_MAX, 0, tp_max), 628);
             }
-        } else {
-            DS4.releaseTouchAll();
+            DS4.finalizeTouchEvent();
         }
+        // otherwise, do nothing since the touch is already released
     } else {
-        // immediately release touchpad
-        DS4.releaseTouchAll();
+        // starts from an untouched touchpad
         // if slider is being touched
+        // TODO maybe make it less sensitive to turns
         if (pos1 != POS_FLOAT) {
             // and we can determine the direction
             if (pos1_prev != POS_FLOAT) {
                 // left
                 if (pos1 < pos1_prev) {
-                    DS4.setLeftAnalog(0, 127);
+                    DS4.setStick(Stick::L, 0, 127);
                     dir_changed = true;
                 // right
                 } else if (pos1 > pos1_prev) {
-                    DS4.setLeftAnalog(255, 127);
+                    DS4.setStick(Stick::L, 255, 127);
                     dir_changed = true;
                 }
             }
@@ -147,11 +159,11 @@ void handle_touchpad_atrf(uint8_t pos1, uint8_t pos2) {
             if (pos2 != POS_FLOAT && pos2_prev != POS_FLOAT) {
                 // left
                 if (pos2 < pos2_prev) {
-                    DS4.setRightAnalog(0, 127);
+                    DS4.setStick(Stick::R, 0, 127);
                     dir_changed = true;
                 // right
                 } else if (pos2 > pos2_prev) {
-                    DS4.setRightAnalog(255, 127);
+                    DS4.setStick(Stick::R, 255, 127);
                     dir_changed = true;
                 }
             }
@@ -164,8 +176,8 @@ void handle_touchpad_atrf(uint8_t pos1, uint8_t pos2) {
     }
     // if waiting for release, then just release
     if (!released && stick_hold_frames == 0) {
-        DS4.setLeftAnalog(127, 127);
-        DS4.setRightAnalog(127, 127);
+        DS4.setStick(Stick::L, 127, 127);
+        DS4.setStick(Stick::R, 127, 127);
         released = true;
     }
     if (stick_hold_frames > 0) stick_hold_frames--;
@@ -173,11 +185,8 @@ void handle_touchpad_atrf(uint8_t pos1, uint8_t pos2) {
     pos2_prev = pos2;
 }
 
-// TODO
-void scan_touchpad(void) {
+static inline void scan_touchpad(void) {
     uint8_t pos1 = POS_FLOAT, pos2 = POS_FLOAT;
-    uint8_t tmpstate;
-
     RAL.update();
     RAR.update();
     SoftPotMagic.update();
@@ -193,9 +202,9 @@ void scan_touchpad(void) {
             handle_touchpad_direct_mapping(pos1, pos2, tp_mode == TP_MODE_TP_C);
             break;
         // ULRD
-        case TP_MODE_DPAD:
-            DS4.releaseTouchAll();
-            tmpstate = 0;
+        case TP_MODE_DPAD: {
+            DS4.clearTouchEvents();
+            uint8_t tmpstate = 0;
             if (pos1 != POS_FLOAT) {
                 pos1 = map(pos1, POS_MIN, POS_MAX, 0, 3);
             } else {
@@ -208,37 +217,9 @@ void scan_touchpad(void) {
             }
             if (pos1 != 4) tmpstate |= 1 << pos1;
             if (pos2 != 4) tmpstate |= 1 << pos2;
-
-            switch (tmpstate) {
-                case 1:
-                    DS4.pressDpad(DS4_DPAD_N);
-                    break;
-                case 2:
-                    DS4.pressDpad(DS4_DPAD_W);
-                    break;
-                case 4:
-                    DS4.pressDpad(DS4_DPAD_E);
-                    break;
-                case 8:
-                    DS4.pressDpad(DS4_DPAD_S);
-                    break;
-                case 3:
-                    DS4.pressDpad(DS4_DPAD_NW);
-                    break;
-                case 5:
-                    DS4.pressDpad(DS4_DPAD_NE);
-                    break;
-                case 10:
-                    DS4.pressDpad(DS4_DPAD_SW);
-                    break;
-                case 12:
-                    DS4.pressDpad(DS4_DPAD_SE);
-                    break;
-                case 0:
-                default:
-                    DS4.releaseDpad();
-            }
+            DS4.setDpadUniversalSOCD(tmpstate & (1 << 0), tmpstate & (1 << 2), tmpstate & (1 << 3), tmpstate & (1 << 1));
             break;
+        }
         case TP_MODE_LR:
             // TODO
             break;
@@ -283,66 +264,23 @@ void handle_tp_mode_switch(void) {
     }
 }
 
-// TODO
 void handle_ds4_pass(void) {
     if (!RealDS4.connected()) return;
 
-    // axis to buttons to axis, really? D:
-    if (RealDS4.getButtonPress(UP)) {
-        if (RealDS4.getButtonPress(LEFT)) {
-            DS4.pressDpad(DS4_DPAD_NW);
-        } else if (RealDS4.getButtonPress(RIGHT)) {
-            DS4.pressDpad(DS4_DPAD_NE);
-        } else {
-            DS4.pressDpad(DS4_DPAD_N);
-        }
-    } else if (RealDS4.getButtonPress(DOWN)) {
-        if (RealDS4.getButtonPress(LEFT)) {
-            DS4.pressDpad(DS4_DPAD_SW);
-        } else if (RealDS4.getButtonPress(RIGHT)) {
-            DS4.pressDpad(DS4_DPAD_SE);
-        } else {
-            DS4.pressDpad(DS4_DPAD_S);
-        }
-    } else if (RealDS4.getButtonPress(LEFT)) {
-        DS4.pressDpad(DS4_DPAD_W);
-    } else if (RealDS4.getButtonPress(RIGHT)) {
-        DS4.pressDpad(DS4_DPAD_E);
-    } else {
-        DS4.releaseDpad();
-    }
+    // dpad
+    DS4.setDpadUniversalSOCD(RealDS4.getButtonPress(UP), \
+                             RealDS4.getButtonPress(RIGHT), \
+                             RealDS4.getButtonPress(DOWN), \
+                             RealDS4.getButtonPress(LEFT));
 
     // buttons TODO the rest of them
-    if (RealDS4.getButtonPress(L1)) {
-        DS4.pressButton(DS4_BTN_L1);
-    } else {
-        DS4.releaseButton(DS4_BTN_L1);
-    }
-    if (RealDS4.getButtonPress(R1)) {
-        DS4.pressButton(DS4_BTN_R1);
-    } else {
-        DS4.releaseButton(DS4_BTN_R1);
-    }
-    if (RealDS4.getButtonPress(L2)) {
-        DS4.pressButton(DS4_BTN_L2);
-    } else {
-        DS4.releaseButton(DS4_BTN_L2);
-    }
-    if (RealDS4.getButtonPress(R2)) {
-        DS4.pressButton(DS4_BTN_R2);
-    } else {
-        DS4.releaseButton(DS4_BTN_R2);
-    }
+    DS4.setKeyUniversal(Key::LButton, RealDS4.getButtonPress(L1));
+    DS4.setKeyUniversal(Key::RButton, RealDS4.getButtonPress(R1));
 
     // analog TODO L2R2
-    DS4.setLeftAnalog(RealDS4.getAnalogHat(LeftHatX), RealDS4.getAnalogHat(LeftHatY));
-    DS4.setRightAnalog(RealDS4.getAnalogHat(RightHatX), RealDS4.getAnalogHat(RightHatY));
-}
+    DS4.setStick(Stick::L, RealDS4.getAnalogHat(LeftHatX), RealDS4.getAnalogHat(LeftHatY));
+    DS4.setStick(Stick::R, RealDS4.getAnalogHat(RightHatX), RealDS4.getAnalogHat(RightHatY));
 
-void _scan_all() {
-    scan_buttons();
-    scan_touchpad();
-    if (controller_settings.perf_ctr) sps++;
 }
 
 void setup() {
@@ -377,7 +315,7 @@ void setup() {
         while (1);
     }
 
-    DEBUG_CONSOLE_PRINTLN("I: init usb");
+    DEBUG_CONSOLE_PRINTLN("I: init ds4d");
     DS4.begin();
 
     digitalWrite(BTN_CSL, LOW);
@@ -406,41 +344,37 @@ void setup() {
         LCD.print("DP");
     }
 
-    Scan.begin(_scan_all, SCAN_INTERVAL_US);
+    ScanEvent.attach([](EventResponderRef event) {
+        USBH.Task();
+        DS4T.update();
+        DS4.update();
+        scan_buttons();
+        scan_touchpad();
+        if (controller_settings.perf_ctr) sps++;
+        handle_tp_mode_switch();
+        if (controller_settings.ds4_passthrough) handle_ds4_pass();
+    });
+
+    LCDPerfEvent.attach([](EventResponderRef event) {
+        if (controller_settings.perf_ctr) {
+            LCD.setCursor(0, 0);
+            LCD.print("                ");
+            LCD.setCursor(0, 0);
+            LCD.print(fps);
+            LCD.setCursor(8, 0);
+            LCD.print(sps);
+            fps = 0;
+            sps = 0;
+        }
+    });
+
+    ScanTimer.beginRepeating(1, ScanEvent);
+    LCDPerfTimer.beginRepeating(1000, LCDPerfEvent);
 }
 
 void loop() {
-    // Poll the USBH controller
-    static uint16_t fps = 0;
-    static uint32_t perf = millis();
-
-    NVIC_DISABLE_IRQ(IRQ_PIT);
-    USBH.Task();
-    DS4T.update();
-    DS4.update();
-    if (controller_settings.perf_ctr) {
-        if (DS4.sendReport()) {
-            fps++;
-        }
-    } else {
-        DS4.sendReport();
+    if (DS4.sendReportBlocking() and controller_settings.perf_ctr) {
+        fps++;
     }
-    NVIC_ENABLE_IRQ(IRQ_PIT);
-
-    handle_tp_mode_switch();
-    if (controller_settings.ds4_passthrough) handle_ds4_pass();
-
-    if (controller_settings.perf_ctr && millis() - perf >= 1000) {
-        perf = millis();
-        LCD.setCursor(0, 0);
-        LCD.print("                ");
-        NVIC_DISABLE_IRQ(IRQ_PIT);
-        LCD.setCursor(0, 0);
-        LCD.print(fps);
-        LCD.setCursor(8, 0);
-        LCD.print(sps);
-        fps = 0;
-        sps = 0;
-        NVIC_ENABLE_IRQ(IRQ_PIT);
-    }
+    yield();
 }
