@@ -20,7 +20,7 @@
 using namespace rds4;
 
 // Debug info
-#if defined(DS4_DEBUG_INFO) && DS4_DEBUG_INFO == 1
+#if defined(RDS4_DEBUG)
     #define DEBUG_CONSOLE_INIT() Serial1.begin(115200)
     #define DEBUG_CONSOLE_PRINT(args) Serial1.print(args)
     #define DEBUG_CONSOLE_PRINTLN(args) Serial1.println(args)
@@ -39,8 +39,11 @@ TransportDS4Teensy DS4T(&DS4A);
 ControllerDS4SOCD<> DS4(&DS4T);
 
 EventResponder ScanEvent;
+EventResponder LowSpeedScanEvent;
 EventResponder LCDPerfEvent;
+EventResponder DS4TUpdateEvent;
 MillisTimer ScanTimer;
+MillisTimer LowSpeedScanTimer;
 MillisTimer LCDPerfTimer;
 
 const uint8_t DPAD_MAP[4] = {6, 7, 14, 15}; // ULDR
@@ -346,13 +349,15 @@ void setup() {
 
     ScanEvent.attach([](EventResponderRef event) {
         USBH.Task();
-        DS4T.update();
         DS4.update();
         scan_buttons();
         scan_touchpad();
-        if (controller_settings.perf_ctr) sps++;
-        handle_tp_mode_switch();
         if (controller_settings.ds4_passthrough) handle_ds4_pass();
+        if (controller_settings.perf_ctr) sps++;
+    });
+
+    LowSpeedScanEvent.attach([](EventResponderRef event) {
+        handle_tp_mode_switch();
     });
 
     LCDPerfEvent.attach([](EventResponderRef event) {
@@ -368,7 +373,18 @@ void setup() {
         }
     });
 
+    // The lazy-update task for transport
+    DS4TUpdateEvent.attach([](EventResponderRef event) {
+        DS4T.update();
+    });
+
+    // Schedules the update task only when needed
+    DS4T.attachStateChangeCallback([](void) {
+        DS4TUpdateEvent.triggerEvent();
+    });
+
     ScanTimer.beginRepeating(1, ScanEvent);
+    LowSpeedScanTimer.beginRepeating(4, LowSpeedScanEvent);
     LCDPerfTimer.beginRepeating(1000, LCDPerfEvent);
 }
 
