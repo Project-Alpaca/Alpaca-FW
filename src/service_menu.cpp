@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <SPI.h>
 #include <Encoder.h>
-#include <LiquidCrystal.h>
+#include <LiquidCrystalNew.h>
 #include <MD_Menu.h>
 #include <ResponsiveAnalogRead.h>
 

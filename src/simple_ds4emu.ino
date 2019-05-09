@@ -9,7 +9,7 @@
 
 #include <SPI.h>
 #include <Encoder.h>
-#include <LiquidCrystal.h>
+#include <LiquidCrystalNew.h>
 #include <ResponsiveAnalogRead.h>
 
 #include "service_menu.h"
