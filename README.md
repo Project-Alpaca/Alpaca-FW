@@ -6,8 +6,8 @@ Teensyduino-based firmware for Project Diva Future Tone controller project based
 
 - 16 key shift register-based general purpose input (partially remappable, WIP)
 - Shift register-based 8 channel programmable lamp driver/power switch (expandable)
-- Has a built-in UI for controller settings, no need for a PC (for all runtime settings)
-- 1kHz internal scanning rate, timer driven, stable 250Hz (1kHz when compiled with turbo mode enabled) report output
+- Has a built-in UI for runtime controller settings, no need for a PC
+- Stable 250Hz (1kHz when compiled with turbo mode enabled) report output
 - True slider (although it uses resistive sensing and feels different than official)
   - Capacitive sensing ETA unknown
 - **Immune** to system updates depending on your settings of USB descriptor thanks to the usage of traditional passthrough technique (instead of relying on stolen keys like B***k)
