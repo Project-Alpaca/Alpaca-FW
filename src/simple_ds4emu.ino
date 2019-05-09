@@ -39,10 +39,11 @@ TransportDS4Teensy DS4T(&DS4A);
 ControllerDS4SOCD<> DS4(&DS4T);
 
 EventResponder ScanEvent;
+EventResponder USBHTaskEvent;
 EventResponder LowSpeedScanEvent;
 EventResponder LCDPerfEvent;
 EventResponder DS4TUpdateEvent;
-MillisTimer ScanTimer;
+MillisTimer USBHTaskTimer;
 MillisTimer LowSpeedScanTimer;
 MillisTimer LCDPerfTimer;
 
@@ -252,6 +253,7 @@ void redraw_tp_mode(void) {
     }
 }
 
+// TODO does not work at lower scan rate
 void handle_tp_mode_switch(void) {
     long qei_step = QEI.read() / 4;
     if (qei_step != 0) {
@@ -348,7 +350,6 @@ void setup() {
     }
 
     ScanEvent.attach([](EventResponderRef event) {
-        USBH.Task();
         DS4.update();
         scan_buttons();
         scan_touchpad();
@@ -358,6 +359,10 @@ void setup() {
 
     LowSpeedScanEvent.attach([](EventResponderRef event) {
         handle_tp_mode_switch();
+    });
+
+    USBHTaskEvent.attach([](EventResponderRef event) {
+        USBH.Task();
     });
 
     LCDPerfEvent.attach([](EventResponderRef event) {
@@ -383,7 +388,9 @@ void setup() {
         DS4TUpdateEvent.triggerEvent();
     });
 
-    ScanTimer.beginRepeating(1, ScanEvent);
+    ScanEvent.triggerEvent();
+
+    USBHTaskTimer.beginRepeating(1, USBHTaskEvent);
     LowSpeedScanTimer.beginRepeating(4, LowSpeedScanEvent);
     LCDPerfTimer.beginRepeating(1000, LCDPerfEvent);
 }
@@ -392,5 +399,6 @@ void loop() {
     if (DS4.sendReportBlocking() and controller_settings.perf_ctr) {
         fps++;
     }
+    ScanEvent.triggerEvent();
     yield();
 }
