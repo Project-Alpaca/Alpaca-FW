@@ -54,7 +54,7 @@ const uint8_t DPAD_MAP[4] = {6, 7, 14, 15}; // ULDR
 uint8_t lamps;
 uint16_t buttons;
 uint8_t tp_mode;
-// Scans-per-second conter
+// Scans-per-second counter
 static uint16_t sps = 0;
 static uint16_t fps = 0;
 
@@ -101,13 +101,10 @@ void handle_touchpad_direct_mapping(uint8_t pos1, uint8_t pos2, bool click) {
             DS4.pressKey(DS4.KEY_TP);
         }
         DS4.setTouchEvent(0, true, map(pos1, POS_MIN, POS_MAX, 0, 1919), 471);
-        //DS4.setTouchPos1(map(pos1, POS_MIN, POS_MAX, 0, 1919), 471);
         if (pos2 != POS_FLOAT) {
             DS4.setTouchEvent(1, true, map(pos2, POS_MIN, POS_MAX, 0, 1919), 471);
-            //DS4.setTouchPos2(map(pos2, POS_MIN, POS_MAX, 0, 1919), 471);
         } else {
             DS4.setTouchEvent(1, false);
-            //DS4.releaseTouchPos2();
         }
         DS4.finalizeTouchEvent();
     } else {
@@ -264,7 +261,7 @@ void handle_tp_mode_switch(void) {
         } else {
             tp_mode += qei_step;
         }
-        
+
         tp_mode %= TP_NB_MODES;
         redraw_tp_mode();
         QEI.write(0);
