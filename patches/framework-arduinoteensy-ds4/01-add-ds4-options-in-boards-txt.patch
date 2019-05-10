@@ -1,0 +1,66 @@
+--- boards.txt
++++ boards.txt
+@@ -82,6 +82,12 @@
+ teensy36.menu.usb.flightsimjoystick.fake_serial=teensy_gateway
+ teensy36.menu.usb.everything=All of the Above
+ teensy36.menu.usb.everything.build.usbtype=USB_EVERYTHING
++teensy36.menu.usb.ds4=PS4 Controller
++teensy36.menu.usb.ds4.build.usbtype=USB_DS4
++teensy36.menu.usb.ds4.fake_serial=teensy_gateway
++teensy36.menu.usb.ds4stub=PS4 Controller (Stub)
++teensy36.menu.usb.ds4stub.build.usbtype=USB_DS4STUB
++teensy36.menu.usb.ds4stub.fake_serial=teensy_gateway
+ teensy36.menu.usb.disable=No USB
+ teensy36.menu.usb.disable.build.usbtype=USB_DISABLED
+ 
+@@ -284,6 +290,12 @@
+ teensy35.menu.usb.flightsimjoystick=Flight Sim Controls + Joystick
+ teensy35.menu.usb.flightsimjoystick.build.usbtype=USB_FLIGHTSIM_JOYSTICK
+ teensy35.menu.usb.flightsimjoystick.fake_serial=teensy_gateway
++teensy35.menu.usb.ds4=PS4 Controller
++teensy35.menu.usb.ds4.build.usbtype=USB_DS4
++teensy35.menu.usb.ds4.fake_serial=teensy_gateway
++teensy35.menu.usb.ds4stub=PS4 Controller (Stub)
++teensy35.menu.usb.ds4stub.build.usbtype=USB_DS4STUB
++teensy35.menu.usb.ds4stub.fake_serial=teensy_gateway
+ teensy35.menu.usb.everything=All of the Above
+ teensy35.menu.usb.everything.build.usbtype=USB_EVERYTHING
+ teensy35.menu.usb.disable=No USB
+@@ -480,6 +492,12 @@
+ teensy31.menu.usb.flightsimjoystick.fake_serial=teensy_gateway
+ teensy31.menu.usb.everything=All of the Above
+ teensy31.menu.usb.everything.build.usbtype=USB_EVERYTHING
++teensy31.menu.usb.ds4=PS4 Controller
++teensy31.menu.usb.ds4.build.usbtype=USB_DS4
++teensy31.menu.usb.ds4.fake_serial=teensy_gateway
++teensy31.menu.usb.ds4stub=PS4 Controller (Stub)
++teensy31.menu.usb.ds4stub.build.usbtype=USB_DS4STUB
++teensy31.menu.usb.ds4stub.fake_serial=teensy_gateway
+ teensy31.menu.usb.disable=No USB
+ teensy31.menu.usb.disable.build.usbtype=USB_DISABLED
+ 
+@@ -672,6 +690,12 @@
+ teensy30.menu.usb.flightsim=Flight Sim Controls
+ teensy30.menu.usb.flightsim.build.usbtype=USB_FLIGHTSIM
+ teensy30.menu.usb.flightsim.fake_serial=teensy_gateway
++teensy30.menu.usb.ds4=PS4 Controller
++teensy30.menu.usb.ds4.build.usbtype=USB_DS4
++teensy30.menu.usb.ds4.fake_serial=teensy_gateway
++teensy30.menu.usb.ds4stub=PS4 Controller (Stub)
++teensy30.menu.usb.ds4stub.build.usbtype=USB_DS4STUB
++teensy30.menu.usb.ds4stub.fake_serial=teensy_gateway
+ teensy30.menu.usb.disable=No USB
+ teensy30.menu.usb.disable.build.usbtype=USB_DISABLED
+ 
+@@ -823,6 +847,12 @@
+ teensyLC.menu.usb.flightsim=Flight Sim Controls
+ teensyLC.menu.usb.flightsim.build.usbtype=USB_FLIGHTSIM
+ teensyLC.menu.usb.flightsim.fake_serial=teensy_gateway
++teensyLC.menu.usb.ds4=PS4 Controller
++teensyLC.menu.usb.ds4.build.usbtype=USB_DS4
++teensyLC.menu.usb.ds4.fake_serial=teensy_gateway
++teensyLC.menu.usb.ds4stub=PS4 Controller (Stub)
++teensyLC.menu.usb.ds4stub.build.usbtype=USB_DS4STUB
++teensyLC.menu.usb.ds4stub.fake_serial=teensy_gateway
+ teensyLC.menu.usb.disable=No USB
+ teensyLC.menu.usb.disable.build.usbtype=USB_DISABLED

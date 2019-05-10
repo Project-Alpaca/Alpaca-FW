@@ -14,6 +14,7 @@ tar xzf framework-arduinoteensy-${FRAMEWORK_VER}.tar.gz -C framework-arduinoteen
 tar xzf platform-teensy-${PLATFORM_VER}.tar.gz && \
 mv platform-teensy-${PLATFORM_VER} teensy && \
 patch -p1 -d framework-arduinoteensy/cores < ../framework-arduinoteensy-ds4/00-teensy-cores.patch && \
+patch -p0 -d framework-arduinoteensy < ../framework-arduinoteensy-ds4/01-add-ds4-options-in-boards-txt.patch && \
 patch -p0 < ../framework-arduinoteensy-ds4/99-pfio-package-name.patch && \
 patch -p0 < ../platform-teensy.patch && \
 mv framework-arduinoteensy framework-arduinoteensy-ds4 && \
