@@ -1,3 +1,5 @@
+#include <Arduino.h>
+
 #include <EventResponder.h>
 #include <AuthenticatorDS4.hpp>
 #include <ControllerDS4.hpp>

@@ -1,3 +1,9 @@
 .pioenvs
 .piolibdeps
 patches/patched
+
+# Generated Eclipse project files
+.cproject
+.project
+.settings
+.settings/*
