@@ -95,6 +95,7 @@ void handle_touchpad_direct_mapping(uint8_t pos1, uint8_t pos2, bool click) {
             // Touchpad keys does not have universal keycode.
             DS4.pressKey(DS4.KEY_TP);
         }
+        DS4.clearTouchEvents();
         DS4.setTouchEvent(0, true, map(pos1, POS_MIN, POS_MAX, 0, 1919), 471);
         if (pos2 != POS_FLOAT) {
             DS4.setTouchEvent(1, true, map(pos2, POS_MIN, POS_MAX, 0, 1919), 471);
@@ -106,6 +107,21 @@ void handle_touchpad_direct_mapping(uint8_t pos1, uint8_t pos2, bool click) {
         if (click) {
             DS4.releaseKey(DS4.KEY_TP);
         }
+        DS4.clearTouchEvents();
+    }
+}
+
+void handle_touchpad_tp2x(uint8_t pos1, uint8_t pos2) {
+    if (pos1 != POS_FLOAT) {
+        DS4.clearTouchEvents();
+        DS4.setTouchEvent(0, true, map(pos1, POS_MIN, POS_MAX, 0, 3839), 314);
+        if (pos2 != POS_FLOAT) {
+            DS4.setTouchEvent(1, true, map(pos2, POS_MIN, POS_MAX, 0, 3839), 628);
+        } else {
+            DS4.setTouchEvent(1, false);
+        }
+        DS4.finalizeTouchEvent();
+    } else {
         DS4.clearTouchEvents();
     }
 }
@@ -220,6 +236,9 @@ static inline void scan_touchpad(void) {
         case TP_MODE_LR:
             // TODO
             break;
+        case TP_MODE_TP2X:
+            handle_touchpad_tp2x(pos1, pos2);
+            break;
     }
 }
 
@@ -242,6 +261,9 @@ void redraw_tp_mode(void) {
             break;
         case TP_MODE_ATRF:
             LCD.print(TP_MODE_ATRF_N);
+            break;
+        case TP_MODE_TP2X:
+            LCD.print(TP_MODE_TP2X_N);
             break;
     }
 }

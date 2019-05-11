@@ -3,12 +3,13 @@
 #include <Arduino.h>
 #include <SPI.h>
 
-#define TP_NB_MODES 5
+#define TP_NB_MODES 6
 #define TP_MODE_TP 0x00
 #define TP_MODE_DPAD 0x01
 #define TP_MODE_LR 0x02
 #define TP_MODE_TP_C 0x03
 #define TP_MODE_ATRF 0x04
+#define TP_MODE_TP2X 0x05
 
 //#define TP_MODE_CUSTOM1 0x10
 //#define TP_MODE_CUSTOM2 0x11
@@ -19,6 +20,7 @@
 #define TP_MODE_LR_N "LR"
 #define TP_MODE_TP_C_N "TP+C"
 #define TP_MODE_ATRF_N "ATRF"
+#define TP_MODE_TP2X_N "TP2X"
 
 // TODO remove those
 #define BTN2DS4(map) (map - 1 - 4)

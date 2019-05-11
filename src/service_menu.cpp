@@ -76,7 +76,7 @@ const MD_Menu::mnuItem_t menu_items[] = {
 };
 
 const char BUTTON_NAMES[] = "NUL|U|L|D|R|SQR|XRO|CIR|TRI|L1|R1|L2|R2|SHR|OPT|L3|R3|PS|TP";
-const char TP_MODES[] = TP_MODE_TP_N "|" TP_MODE_DPAD_N "|" TP_MODE_LR_N "|" TP_MODE_TP_C_N "|" TP_MODE_ATRF_N;
+const char TP_MODES[] = TP_MODE_TP_N "|" TP_MODE_DPAD_N "|" TP_MODE_LR_N "|" TP_MODE_TP_C_N "|" TP_MODE_ATRF_N "|" TP_MODE_TP2X_N;
 
 const MD_Menu::mnuInput_t menu_actions[] = {
     // id desc type handler field_size lower_n lower_e upper_n upper_e list_items
