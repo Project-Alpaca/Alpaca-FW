@@ -48,8 +48,6 @@ MillisTimer USBHTaskTimer;
 MillisTimer LowSpeedScanTimer;
 MillisTimer LCDPerfTimer;
 
-const uint8_t DPAD_MAP[4] = {6, 7, 14, 15}; // ULDR
-
 uint8_t lamps;
 uint16_t buttons;
 uint8_t tp_mode;
@@ -79,7 +77,6 @@ static inline void scan_buttons() {
         lamps = lamps_new;
     }
 
-    // TODO
     for (uint8_t i=0; i<16; i++) {
         // TODO this is hacked to work (for now). We need to find a way to refactor this.
         if (ISBTN(controller_settings.button_mapping[i])) {
@@ -92,7 +89,6 @@ static inline void scan_buttons() {
     }
 }
 
-// TODO
 void handle_touchpad_direct_mapping(uint8_t pos1, uint8_t pos2, bool click) {
     if (pos1 != POS_FLOAT) {
         if (click) {
@@ -114,7 +110,6 @@ void handle_touchpad_direct_mapping(uint8_t pos1, uint8_t pos2, bool click) {
     }
 }
 
-// TODO
 void handle_touchpad_atrf(uint8_t pos1, uint8_t pos2) {
     static uint8_t pos1_prev = POS_FLOAT, pos2_prev = POS_FLOAT;
     static uint8_t stick_hold_frames = 0;
