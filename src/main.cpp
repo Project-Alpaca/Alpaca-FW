@@ -1,9 +1,7 @@
 #include <Arduino.h>
 
 #include <EventResponder.h>
-#include <AuthenticatorDS4.hpp>
-#include <ControllerDS4.hpp>
-#include <TransportDS4.hpp>
+#include <RDS4-DS4.hpp>
 
 #include <usbhub.h>
 #include <PS4USB.h>
@@ -19,7 +17,8 @@
 #include "settings.h"
 #include "constants.h"
 
-using namespace rds4;
+namespace rds4api = rds4::api;
+namespace ds4 = rds4::ds4;
 
 // Debug info
 #if defined(RDS4_DEBUG)
@@ -34,11 +33,11 @@ using namespace rds4;
 
 USB USBH;
 USBHub Hub1(&USBH);
-PS4USB2 RealDS4(&USBH);
+ds4::PS4USB2 RealDS4(&USBH);
 
-AuthenticatorDS4USBH DS4A(&RealDS4);
-TransportDS4Teensy DS4T(&DS4A);
-ControllerDS4SOCD<> DS4(&DS4T);
+ds4::AuthenticatorUSBH DS4A(&RealDS4);
+ds4::TransportTeensy DS4T(&DS4A);
+ds4::ControllerSOCD<> DS4(&DS4T);
 
 EventResponder ScanEvent;
 EventResponder USBHTaskEvent;
@@ -150,11 +149,11 @@ void handle_touchpad_atrf(uint8_t pos1, uint8_t pos2) {
             if (pos1_prev != POS_FLOAT) {
                 // left
                 if (pos1 < pos1_prev) {
-                    DS4.setStick(Stick::L, 0, 127);
+                    DS4.setStick(rds4api::Stick::L, 0, 127);
                     dir_changed = true;
                 // right
                 } else if (pos1 > pos1_prev) {
-                    DS4.setStick(Stick::L, 255, 127);
+                    DS4.setStick(rds4api::Stick::L, 255, 127);
                     dir_changed = true;
                 }
             }
@@ -162,11 +161,11 @@ void handle_touchpad_atrf(uint8_t pos1, uint8_t pos2) {
             if (pos2 != POS_FLOAT && pos2_prev != POS_FLOAT) {
                 // left
                 if (pos2 < pos2_prev) {
-                    DS4.setStick(Stick::R, 0, 127);
+                    DS4.setStick(rds4api::Stick::R, 0, 127);
                     dir_changed = true;
                 // right
                 } else if (pos2 > pos2_prev) {
-                    DS4.setStick(Stick::R, 255, 127);
+                    DS4.setStick(rds4api::Stick::R, 255, 127);
                     dir_changed = true;
                 }
             }
@@ -179,8 +178,8 @@ void handle_touchpad_atrf(uint8_t pos1, uint8_t pos2) {
     }
     // if waiting for release, then just release
     if (!released && stick_hold_frames == 0) {
-        DS4.setStick(Stick::L, 127, 127);
-        DS4.setStick(Stick::R, 127, 127);
+        DS4.setStick(rds4api::Stick::L, 127, 127);
+        DS4.setStick(rds4api::Stick::R, 127, 127);
         released = true;
     }
     if (stick_hold_frames > 0) stick_hold_frames--;
@@ -278,12 +277,12 @@ void handle_ds4_pass(void) {
                              RealDS4.getButtonPress(LEFT));
 
     // buttons TODO the rest of them
-    DS4.setKeyUniversal(Key::LButton, RealDS4.getButtonPress(L1));
-    DS4.setKeyUniversal(Key::RButton, RealDS4.getButtonPress(R1));
+    DS4.setKeyUniversal(rds4api::Key::LButton, RealDS4.getButtonPress(L1));
+    DS4.setKeyUniversal(rds4api::Key::RButton, RealDS4.getButtonPress(R1));
 
     // analog TODO L2R2
-    DS4.setStick(Stick::L, RealDS4.getAnalogHat(LeftHatX), RealDS4.getAnalogHat(LeftHatY));
-    DS4.setStick(Stick::R, RealDS4.getAnalogHat(RightHatX), RealDS4.getAnalogHat(RightHatY));
+    DS4.setStick(rds4api::Stick::L, RealDS4.getAnalogHat(LeftHatX), RealDS4.getAnalogHat(LeftHatY));
+    DS4.setStick(rds4api::Stick::R, RealDS4.getAnalogHat(RightHatX), RealDS4.getAnalogHat(RightHatY));
 
 }
 
