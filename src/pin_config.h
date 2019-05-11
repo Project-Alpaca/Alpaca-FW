@@ -1,12 +1,12 @@
 #pragma once
 
-#define BTN_CSL 15
-#define BTN_CSB 14
+#define BTN_CSL 18
+#define BTN_CSB 17
 #define USBH_CS 10
 #define USBH_INT 9
 #define USBH_GPX 8
-#define QEI_A 18
-#define QEI_B 17
+#define QEI_A 15
+#define QEI_B 14
 #define QEI_SW 16
 #define LCD_RS 6
 #define LCD_E 7

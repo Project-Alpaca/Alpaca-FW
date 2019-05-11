@@ -246,7 +246,6 @@ void redraw_tp_mode(void) {
     }
 }
 
-// TODO does not work at lower scan rate
 void handle_tp_mode_switch(void) {
     long qei_step = QEI.read() / 4;
     if (qei_step != 0) {
@@ -258,7 +257,8 @@ void handle_tp_mode_switch(void) {
 
         tp_mode %= TP_NB_MODES;
         redraw_tp_mode();
-        QEI.write(0);
+        // Set to (current position - consumed steps) to prevent step loss on low scanning rate
+        QEI.write(QEI.read() - qei_step * 4);
     }
 }
 
@@ -384,7 +384,7 @@ void setup() {
     ScanEvent.triggerEvent();
 
     USBHTaskTimer.beginRepeating(1, USBHTaskEvent);
-    LowSpeedScanTimer.beginRepeating(4, LowSpeedScanEvent);
+    LowSpeedScanTimer.beginRepeating(100, LowSpeedScanEvent);
     LCDPerfTimer.beginRepeating(1000, LCDPerfEvent);
 }
 
