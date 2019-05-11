@@ -90,6 +90,7 @@ static inline void scan_buttons() {
 }
 
 void handle_touchpad_direct_mapping(uint8_t pos1, uint8_t pos2, bool click) {
+    DS4.clearTouchEvents();
     if (pos1 != POS_FLOAT) {
         if (click) {
             // Touchpad keys does not have universal keycode.
@@ -106,7 +107,6 @@ void handle_touchpad_direct_mapping(uint8_t pos1, uint8_t pos2, bool click) {
         if (click) {
             DS4.releaseKey(DS4.KEY_TP);
         }
-        DS4.clearTouchEvents();
     }
 }
 
@@ -219,6 +219,7 @@ static inline void scan_touchpad(void) {
         }
         case TP_MODE_LR:
             // TODO
+            DS4.clearTouchEvents();
             break;
     }
 }
