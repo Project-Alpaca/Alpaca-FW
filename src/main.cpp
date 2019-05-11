@@ -389,9 +389,11 @@ void setup() {
 }
 
 void loop() {
-    if (DS4.sendReportBlocking() and controller_settings.perf_ctr) {
-        fps++;
+    if (DS4.sendReportBlocking()) {
+        if (controller_settings.perf_ctr) {
+            fps++;
+        }
+        ScanEvent.triggerEvent();
     }
-    ScanEvent.triggerEvent();
     yield();
 }
