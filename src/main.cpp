@@ -332,6 +332,7 @@ void setup() {
     SoftPotMagic.setCalib(&(controller_settings.tp_calib));
     SoftPotMagic.setMinGapRatio(.10f);
 
+    // Prevent incompatible value overflows the state
     tp_mode = controller_settings.default_tp_mode % TP_NB_MODES;
 
     LCD.begin(16, 2);
@@ -343,6 +344,7 @@ void setup() {
         LCD.print("DP");
     }
 
+    // Callback for input scan event
     ScanEvent.attach([](EventResponderRef event) {
         DS4.update();
         scan_buttons();
@@ -351,14 +353,17 @@ void setup() {
         if (controller_settings.perf_ctr) sps++;
     });
 
+    // Callback for lower-speed input scan event (for reading rotary encoder values)
     LowSpeedScanEvent.attach([](EventResponderRef event) {
         handle_tp_mode_switch();
     });
 
+    // Background task for USB host library
     USBHTaskEvent.attach([](EventResponderRef event) {
         USBH.Task();
     });
 
+    // Callback for scan/report rate display
     LCDPerfEvent.attach([](EventResponderRef event) {
         if (controller_settings.perf_ctr) {
             LCD.setCursor(0, 0);
@@ -377,15 +382,20 @@ void setup() {
         DS4T.update();
     });
 
+    // Callback for authentication state change
     // Schedules the update task only when needed
     DS4T.attachStateChangeCallback([](void) {
         DS4TUpdateEvent.triggerEvent();
     });
 
+    // Immediately start scanning
     ScanEvent.triggerEvent();
 
+    // USBH is polled every 1ms
     USBHTaskTimer.beginRepeating(1, USBHTaskEvent);
+    // 100ms (10fps) should be okay for rotary encoder since the actual counting is done via interrupt
     LowSpeedScanTimer.beginRepeating(100, LowSpeedScanEvent);
+    // Update perf counter every 1 second
     LCDPerfTimer.beginRepeating(1000, LCDPerfEvent);
 }
 
@@ -394,7 +404,9 @@ void loop() {
         if (controller_settings.perf_ctr) {
             fps++;
         }
+        // Trigger a input scan event as soon as one report was sent successfully
         ScanEvent.triggerEvent();
     }
+    // Do any unfinished tasks if needed
     yield();
 }
