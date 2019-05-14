@@ -14,7 +14,6 @@
 
 #include "service_menu.h"
 #include "common_objs.h"
-#include "settings.h"
 #include "constants.h"
 
 namespace rds4api = rds4::api;
@@ -31,14 +30,17 @@ namespace ds4 = rds4::ds4;
     #define DEBUG_CONSOLE_PRINTLN(args) while (0) {}
 #endif
 
+// Authenticator DS4 controller over USBH. Also used for DS4 passthrough.
 USB USBH;
 USBHub Hub1(&USBH);
 ds4::PS4USB2 RealDS4(&USBH);
 
+// PS4 controller framework
 ds4::AuthenticatorUSBH DS4A(&RealDS4);
 ds4::TransportTeensy DS4T(&DS4A);
 ds4::ControllerSOCD<> DS4(&DS4T);
 
+// Various events (tasks)
 EventResponder ScanEvent;
 EventResponder USBHTaskEvent;
 EventResponder LowSpeedScanEvent;
@@ -48,10 +50,12 @@ MillisTimer USBHTaskTimer;
 MillisTimer LowSpeedScanTimer;
 MillisTimer LCDPerfTimer;
 
+// Misc. persistent states
 uint8_t lamps;
 uint16_t buttons;
 uint8_t tp_mode;
-// Scans-per-second counter
+
+// Performance counters (scans-per-second and reports-per-second)
 static uint16_t sps = 0;
 static uint16_t fps = 0;
 
@@ -79,11 +83,11 @@ static inline void scan_buttons() {
 
     for (uint8_t i=0; i<16; i++) {
         // TODO this is hacked to work (for now). We need to find a way to refactor this.
-        if (ISBTN(controller_settings.button_mapping[i])) {
+        if (ISBTN(cfg.button_mapping[i])) {
             if (!(buttons & (1 << i))) {
-                DS4.pressKey(BTN2DS4(controller_settings.button_mapping[i]));
+                DS4.pressKey(BTN2DS4(cfg.button_mapping[i]));
             } else {
-                DS4.releaseKey(BTN2DS4(controller_settings.button_mapping[i]));
+                DS4.releaseKey(BTN2DS4(cfg.button_mapping[i]));
             }
         }
     }
@@ -114,7 +118,7 @@ void handle_touchpad_atrf(uint8_t pos1, uint8_t pos2) {
     static uint8_t pos1_prev = POS_FLOAT, pos2_prev = POS_FLOAT;
     static uint8_t stick_hold_frames = 0;
     static bool released = true;
-    static const int16_t tp_max = ATRF_SEG_WIDTH * controller_settings.max_segs - 1;
+    static const int16_t tp_max = ATRF_SEG_WIDTH * cfg.max_segs - 1;
 
     bool is_chain_slide = (DS4.getRumbleIntensityRight() > 0);
     bool dir_changed = false;
@@ -129,7 +133,7 @@ void handle_touchpad_atrf(uint8_t pos1, uint8_t pos2) {
             // Map both points to pos1
             // TODO what if 2 points are moving towards different directions?
             DS4.setTouchEvent(0, true, map(pos1, POS_MIN, POS_MAX, 0, tp_max), 314);
-            if (controller_settings.seg_mult) {
+            if (cfg.seg_mult) {
                 DS4.setTouchEvent(1, true, map(pos1, POS_MIN, POS_MAX, 0, tp_max), 628);
             }
             DS4.finalizeTouchEvent();
@@ -167,7 +171,7 @@ void handle_touchpad_atrf(uint8_t pos1, uint8_t pos2) {
         }
         // check if direction updates. If so, reset frame counter
         if (dir_changed) {
-            stick_hold_frames = controller_settings.stick_hold;
+            stick_hold_frames = cfg.stick_hold;
             released = false;
         }
     }
@@ -293,9 +297,10 @@ void setup() {
         while (1);
     }
 
-    settings_load(&controller_settings);
+    // Read settings from EEPROM
+    cfg.load();
 
-    if (controller_settings.tp_calib.leftMin == -1 || controller_settings.tp_calib.rightMin == -1) {
+    if (cfg.tp_calib.leftMin == -1 || cfg.tp_calib.rightMin == -1) {
         service_menu_main();
         while (1);
     }
@@ -329,17 +334,17 @@ void setup() {
     USBH.gpioWr(0x01);
 
     SoftPotMagic.begin(SP_L, SP_R, respAnalogRead);
-    SoftPotMagic.setCalib(&(controller_settings.tp_calib));
+    SoftPotMagic.setCalib(&(cfg.tp_calib));
     SoftPotMagic.setMinGapRatio(.10f);
 
     // Prevent incompatible value overflows the state
-    tp_mode = controller_settings.default_tp_mode % TP_NB_MODES;
+    tp_mode = cfg.default_tp_mode % TP_NB_MODES;
 
     LCD.begin(16, 2);
     LCD.clear();
     LCD.home();
     redraw_tp_mode();
-    if (controller_settings.ds4_passthrough) {
+    if (cfg.ds4_passthrough) {
         LCD.setCursor(5, 1);
         LCD.print("DP");
     }
@@ -349,8 +354,8 @@ void setup() {
         DS4.update();
         scan_buttons();
         scan_touchpad();
-        if (controller_settings.ds4_passthrough) handle_ds4_pass();
-        if (controller_settings.perf_ctr) sps++;
+        if (cfg.ds4_passthrough) handle_ds4_pass();
+        if (cfg.perf_ctr) sps++;
     });
 
     // Callback for lower-speed input scan event (for reading rotary encoder values)
@@ -365,7 +370,7 @@ void setup() {
 
     // Callback for scan/report rate display
     LCDPerfEvent.attach([](EventResponderRef event) {
-        if (controller_settings.perf_ctr) {
+        if (cfg.perf_ctr) {
             LCD.setCursor(0, 0);
             LCD.print("                ");
             LCD.setCursor(0, 0);
@@ -401,7 +406,7 @@ void setup() {
 
 void loop() {
     if (DS4.sendReportBlocking()) {
-        if (controller_settings.perf_ctr) {
+        if (cfg.perf_ctr) {
             fps++;
         }
         // Trigger a input scan event as soon as one report was sent successfully

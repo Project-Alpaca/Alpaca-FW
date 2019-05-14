@@ -301,10 +301,10 @@ void tp_calib(void) {
         case 6:
             LCD.setCursor(0, 1);
             LCD.print("Saving...  ");
-            s = &(controller_settings.tp_calib);
+            s = &(cfg.tp_calib);
             c = SoftPotMagic.getCalib();
-            memcpy(s, c, sizeof(calib_t));
-            settings_save(&controller_settings);
+            memcpy(s, c, sizeof(cfg.tp_calib));
+            cfg.save();
             LCD.setCursor(0, 1);
             LCD.print("Done. Press SEL");
             calib_state++;
@@ -380,18 +380,18 @@ MD_Menu::value_t *handle_list(MD_Menu::mnuId_t id, bool get) {
     switch (id) {
         case 13:
             if (get) {
-                menu_buf.value = controller_settings.default_tp_mode % TP_NB_MODES;
+                menu_buf.value = cfg.default_tp_mode % TP_NB_MODES;
             } else {
-                controller_settings.default_tp_mode = menu_buf.value;
-                settings_save(&controller_settings);
+                cfg.default_tp_mode = menu_buf.value;
+                cfg.save();
             }
             break;
         case 32:
             if (get) {
-                menu_buf.value = controller_settings.button_mapping[curr_button];
+                menu_buf.value = cfg.button_mapping[curr_button];
             } else {
-                controller_settings.button_mapping[curr_button] = menu_buf.value;
-                settings_save(&controller_settings);
+                cfg.button_mapping[curr_button] = menu_buf.value;
+                cfg.save();
             }
             break;
         default:
@@ -404,18 +404,18 @@ MD_Menu::value_t *handle_int(MD_Menu::mnuId_t id, bool get) {
     switch (id) {
         case 15:
             if (get) {
-                menu_buf.value = controller_settings.tp_calib.zeroLevel;
+                menu_buf.value = cfg.tp_calib.zeroLevel;
             } else {
-                controller_settings.tp_calib.zeroLevel = menu_buf.value;
-                settings_save(&controller_settings);
+                cfg.tp_calib.zeroLevel = menu_buf.value;
+                cfg.save();
             }
             break;
         case 19:
             if (get) {
-                menu_buf.value = controller_settings.stick_hold;
+                menu_buf.value = cfg.stick_hold;
             } else {
-                controller_settings.stick_hold = menu_buf.value;
-                settings_save(&controller_settings);
+                cfg.stick_hold = menu_buf.value;
+                cfg.save();
             }
             break;
         case 31:
@@ -428,18 +428,18 @@ MD_Menu::value_t *handle_int(MD_Menu::mnuId_t id, bool get) {
         // ATRF Max Segments
         case 40:
             if (get) {
-                menu_buf.value = controller_settings.max_segs;
+                menu_buf.value = cfg.max_segs;
             } else {
-                controller_settings.max_segs = menu_buf.value;
-                settings_save(&controller_settings);
+                cfg.max_segs = menu_buf.value;
+                cfg.save();
             }
             break;
         // ATRF Segment Multiplier
         case 41:
             if (get) {
-                menu_buf.value = controller_settings.seg_mult ? 2 : 1;
+                menu_buf.value = cfg.seg_mult ? 2 : 1;
             } else {
-                controller_settings.seg_mult = menu_buf.value == 2 ? true : false;
+                cfg.seg_mult = menu_buf.value == 2 ? true : false;
             }
             break;
         default:
@@ -452,18 +452,18 @@ MD_Menu::value_t *handle_bool(MD_Menu::mnuId_t id, bool get) {
     switch (id) {
         case 16:
             if (get) {
-                menu_buf.value = controller_settings.ds4_passthrough;
+                menu_buf.value = cfg.ds4_passthrough;
             } else {
-                controller_settings.ds4_passthrough = menu_buf.value;
-                settings_save(&controller_settings);
+                cfg.ds4_passthrough = menu_buf.value;
+                cfg.save();
             }
             break;
         case 17:
             if (get) {
-                menu_buf.value = controller_settings.perf_ctr;
+                menu_buf.value = cfg.perf_ctr;
             } else {
-                controller_settings.perf_ctr = menu_buf.value;
-                settings_save(&controller_settings);
+                cfg.perf_ctr = menu_buf.value;
+                cfg.save();
             }
             break;
         default:
@@ -518,8 +518,8 @@ MD_Menu::value_t *reboot_wrapper(MD_Menu::mnuId_t id, bool get) {
 
 MD_Menu::value_t *clear_eeprom_wrapper(MD_Menu::mnuId_t id, bool get) {
     if (!get) {
-        settings_init(&controller_settings);
-        settings_save(&controller_settings);
+        cfg.reset();
+        cfg.save();
     }
     return nullptr;
 }
@@ -531,7 +531,7 @@ static void service_menu_setup(void) {
     digitalWrite(BTN_CSL, HIGH);
     digitalWrite(BTN_CSB, HIGH);
 
-    settings_load(&controller_settings);
+    cfg.load();
 
     qei_sw_block = true;
 
@@ -549,7 +549,7 @@ static void service_menu_setup(void) {
     reset_qei_sw();
     
     SoftPotMagic.begin(SP_L, SP_R, respAnalogRead);
-    SoftPotMagic.setCalib(&(controller_settings.tp_calib));
+    SoftPotMagic.setCalib(&(cfg.tp_calib));
     SoftPotMagic.setMinGapRatio(.10f);
 
     TestMenu.begin();

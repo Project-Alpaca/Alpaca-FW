@@ -1,11 +1,11 @@
 #pragma once
 
+#include <Arduino.h>
 #include <EEPROM.h>
+#include <CRC32.h>
 #include <SoftPotMagic.h>
 
-#define SETTINGS_VER 0x0800af05
-
-typedef struct {
+struct SettingsData {
     uint32_t magic_ver;
     calib_t tp_calib;
     float tp_gap_ratio;
@@ -17,10 +17,14 @@ typedef struct {
     uint8_t max_segs;
     bool seg_mult;
     uint32_t crc32;
-} __attribute__((packed)) settings_t;
+} __attribute__((packed));
 
-extern void settings_init(settings_t *settings);
-extern void settings_save(settings_t *settings);
-extern void settings_load(settings_t *settings);
-
-extern settings_t controller_settings;
+class Settings : public SettingsData {
+public:
+    Settings();
+    void load();
+    void save();
+    void reset();
+private:
+    const uint32_t SETTINGS_VER = 0x0800af05;
+};
