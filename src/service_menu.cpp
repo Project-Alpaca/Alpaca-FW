@@ -75,9 +75,6 @@ const MD_Menu::mnuItem_t menu_items[] = {
 #endif
 };
 
-const char BUTTON_NAMES[] = "NUL|U|L|D|R|SQR|XRO|CIR|TRI|L1|R1|L2|R2|SHR|OPT|L3|R3|PS|TP";
-const char TP_MODES[] = TP_MODE_TP_N "|" TP_MODE_DPAD_N "|" TP_MODE_LR_N "|" TP_MODE_TP_C_N "|" TP_MODE_ATRF_N;
-
 const MD_Menu::mnuInput_t menu_actions[] = {
     // id desc type handler field_size lower_n lower_e upper_n upper_e list_items
     {10, "Press SEL", MD_Menu::INP_RUN, io_test_wrapper, 0, 0, 0, 0, 0, 0, nullptr},
@@ -380,7 +377,7 @@ MD_Menu::value_t *handle_list(MD_Menu::mnuId_t id, bool get) {
     switch (id) {
         case 13:
             if (get) {
-                menu_buf.value = cfg.default_tp_mode % TP_NB_MODES;
+                menu_buf.value = cfg.default_tp_mode % static_cast<uint8_t>(TPMode::_TOTAL_MODES);
             } else {
                 cfg.default_tp_mode = menu_buf.value;
                 cfg.save();

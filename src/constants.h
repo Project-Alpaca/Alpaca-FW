@@ -3,22 +3,18 @@
 #include <Arduino.h>
 #include <SPI.h>
 
-#define TP_NB_MODES 5
-#define TP_MODE_TP 0x00
-#define TP_MODE_DPAD 0x01
-#define TP_MODE_LR 0x02
-#define TP_MODE_TP_C 0x03
-#define TP_MODE_ATRF 0x04
+enum class TPMode : uint8_t {
+    TP = 0, DPAD, LR, TP_C, ATRF, _TOTAL_MODES,
+};
+
+const char BUTTON_NAMES[] = "NUL|U|L|D|R|SQR|XRO|CIR|TRI|L1|R1|L2|R2|SHR|OPT|L3|R3|PS|TP";
+// Make sure the names are exactly 4 bytes long, otherwise mode display will NOT work
+// Might send a PR to MD_Menu for support of NUL-splitted lists.
+const char TP_MODES[] = "TP  |DPAD|LR  |TP+C|ATRF";
 
 //#define TP_MODE_CUSTOM1 0x10
 //#define TP_MODE_CUSTOM2 0x11
 //#define TP_MODE_CUSTOM3 0x12
-
-#define TP_MODE_TP_N "TP"
-#define TP_MODE_DPAD_N "DPAD"
-#define TP_MODE_LR_N "LR"
-#define TP_MODE_TP_C_N "TP+C"
-#define TP_MODE_ATRF_N "ATRF"
 
 // TODO remove those
 #define BTN2DS4(map) (map - 1 - 4)

@@ -53,7 +53,7 @@ MillisTimer LCDPerfTimer;
 // Misc. persistent states
 uint8_t lamps;
 uint16_t buttons;
-uint8_t tp_mode;
+TPMode tp_mode;
 
 // Performance counters (scans-per-second and reports-per-second)
 static uint16_t sps = 0;
@@ -195,15 +195,15 @@ static inline void scan_touchpad(void) {
     pos2 = SoftPotMagic.pos2();
 
     switch (tp_mode) {
-        case TP_MODE_ATRF:
+        case TPMode::ATRF:
             handle_touchpad_atrf(pos1, pos2);
             break;
-        case TP_MODE_TP_C:
-        case TP_MODE_TP:
-            handle_touchpad_direct_mapping(pos1, pos2, tp_mode == TP_MODE_TP_C);
+        case TPMode::TP_C:
+        case TPMode::TP:
+            handle_touchpad_direct_mapping(pos1, pos2, tp_mode == TPMode::TP_C);
             break;
         // ULRD
-        case TP_MODE_DPAD: {
+        case TPMode::DPAD: {
             DS4.clearTouchEvents();
             uint8_t tmpstate = 0;
             if (pos1 != POS_FLOAT) {
@@ -221,46 +221,36 @@ static inline void scan_touchpad(void) {
             DS4.setDpadUniversalSOCD(tmpstate & (1 << 0), tmpstate & (1 << 2), tmpstate & (1 << 3), tmpstate & (1 << 1));
             break;
         }
-        case TP_MODE_LR:
+        case TPMode::LR:
             // TODO
             DS4.clearTouchEvents();
+            break;
+        default:
             break;
     }
 }
 
 void redraw_tp_mode(void) {
+    // For variable-length strings we should clear the area first (currently not needed)
+    //LCD.setCursor(0, 1);
+    //LCD.print("    ");
     LCD.setCursor(0, 1);
-    LCD.print("    ");
-    LCD.setCursor(0, 1);
-    switch (tp_mode) {
-        case TP_MODE_TP:
-            LCD.print(TP_MODE_TP_N);
-            break;
-        case TP_MODE_DPAD:
-            LCD.print(TP_MODE_DPAD_N);
-            break;
-        case TP_MODE_LR:
-            LCD.print(TP_MODE_LR_N);
-            break;
-        case TP_MODE_TP_C:
-            LCD.print(TP_MODE_TP_C_N);
-            break;
-        case TP_MODE_ATRF:
-            LCD.print(TP_MODE_ATRF_N);
-            break;
-    }
+    // should be sanitized before
+    LCD.write(&TP_MODES[static_cast<uint8_t>(tp_mode) * 5], 4);
 }
 
 void handle_tp_mode_switch(void) {
     long qei_step = QEI.read() / 4;
+    auto tp_mode_index = static_cast<uint8_t>(tp_mode);
     if (qei_step != 0) {
-        if (qei_step < 0 && tp_mode < -qei_step) {
-            tp_mode += (TP_NB_MODES + qei_step);
+        if (qei_step < 0 && tp_mode_index < -qei_step) {
+            tp_mode_index += (static_cast<uint8_t>(TPMode::_TOTAL_MODES) + qei_step);
         } else {
-            tp_mode += qei_step;
+            tp_mode_index += qei_step;
         }
-
-        tp_mode %= TP_NB_MODES;
+        // Ensures the TP mode always lands in range and be valid.
+        tp_mode_index %= static_cast<uint8_t>(TPMode::_TOTAL_MODES);
+        tp_mode = static_cast<TPMode>(tp_mode_index);
         redraw_tp_mode();
         // Set to (current position - consumed steps) to prevent step loss on low scanning rate
         QEI.write(QEI.read() - qei_step * 4);
@@ -338,7 +328,7 @@ void setup() {
     SoftPotMagic.setMinGapRatio(.10f);
 
     // Prevent incompatible value overflows the state
-    tp_mode = cfg.default_tp_mode % TP_NB_MODES;
+    tp_mode = static_cast<TPMode>(cfg.default_tp_mode % static_cast<uint8_t>(TPMode::_TOTAL_MODES));
 
     LCD.begin(16, 2);
     LCD.clear();
