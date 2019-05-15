@@ -7,10 +7,8 @@ enum class TPMode : uint8_t {
     TP = 0, DPAD, LR, TP_C, ATRF, _TOTAL_MODES,
 };
 
-const char BUTTON_NAMES[] = "NUL|U|L|D|R|SQR|XRO|CIR|TRI|L1|R1|L2|R2|SHR|OPT|L3|R3|PS|TP";
-// Make sure the names are exactly 4 bytes long, otherwise mode display will NOT work
-// Might send a PR to MD_Menu for support of NUL-splitted lists.
-const char TP_MODES[] = "TP  |DPAD|LR  |TP+C|ATRF";
+extern const char BUTTON_NAMES[];
+extern const char TP_MODES[];
 
 //#define TP_MODE_CUSTOM1 0x10
 //#define TP_MODE_CUSTOM2 0x11
@@ -48,8 +46,8 @@ const char TP_MODES[] = "TP  |DPAD|LR  |TP+C|ATRF";
 }
 */
 
-const SPISettings SPI596 = SPISettings(2000000, MSBFIRST, SPI_MODE0);
-const SPISettings SPI4021 = SPISettings(2000000, MSBFIRST, SPI_MODE0);
+extern const SPISettings SPI596;
+extern const SPISettings SPI4021;
+extern const uint16_t ATRF_SEG_WIDTH;
 
-const uint16_t ATRF_SEG_WIDTH = 96;
 #include "pin_config.h"
