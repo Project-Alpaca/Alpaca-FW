@@ -8,7 +8,7 @@
 struct SettingsData {
     uint32_t magic_ver;
     calib_t tp_calib;
-    float tp_gap_ratio;
+    uint16_t tp_gap_ratio;
     uint8_t button_mapping[16];
     uint8_t default_tp_mode;
     bool ds4_passthrough;
@@ -26,5 +26,5 @@ public:
     void save();
     void reset();
 private:
-    const uint32_t SETTINGS_VER = 0x0800af05;
+    const uint32_t SETTINGS_VER = 0x0900af05;
 };

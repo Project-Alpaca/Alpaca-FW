@@ -23,9 +23,11 @@ const SPISettings SPI4021 = SPISettings(2000000, MSBFIRST, SPI_MODE0);
 int respAnalogRead(uint8_t pin) {
     switch (pin) {
         case SP_L:
+            RAL.update();
             return RAL.getValue();
             break;
         case SP_R:
+            RAR.update();
             return RAR.getValue();
             break;
         default:

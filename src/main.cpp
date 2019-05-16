@@ -188,8 +188,6 @@ void handle_touchpad_atrf(uint8_t pos1, uint8_t pos2) {
 
 static inline void scan_touchpad(void) {
     uint8_t pos1 = POS_FLOAT, pos2 = POS_FLOAT;
-    RAL.update();
-    RAR.update();
     SoftPotMagic.update();
     pos1 = SoftPotMagic.pos1();
     pos2 = SoftPotMagic.pos2();
@@ -325,7 +323,7 @@ void setup() {
 
     SoftPotMagic.begin(SP_L, SP_R, respAnalogRead);
     SoftPotMagic.setCalib(&(cfg.tp_calib));
-    SoftPotMagic.setMinGapRatio(.10f);
+    SoftPotMagic.setMinGapRatioInt(cfg.tp_gap_ratio);
 
     // Prevent incompatible value overflows the state
     tp_mode = static_cast<TPMode>(cfg.default_tp_mode % static_cast<uint8_t>(TPMode::_TOTAL_MODES));

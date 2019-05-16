@@ -4,6 +4,7 @@
 #include <LiquidCrystalNew.h>
 #include <MD_Menu.h>
 #include <ResponsiveAnalogRead.h>
+#include <SoftPotMagic.h>
 
 #include "service_menu.h"
 #include "common_objs.h"
@@ -223,7 +224,6 @@ void tp_test(void) {
 void tp_calib(void) {
     static bool transition = true;
     static int8_t calib_state = 0;
-    static int8_t zero_count = 0;
     bool calib_result;
     const calib_t *c;
     calib_t *s;
@@ -242,7 +242,6 @@ void tp_calib(void) {
         TestMenu.reset();
         transition = true;
         calib_state = 0;
-        zero_count = 0;
         return;
     }
 
@@ -280,18 +279,20 @@ void tp_calib(void) {
             break;
         case 4:
             LCD.setCursor(0, 1);
-            LCD.print("Calib zero (3 times)");
+            LCD.print("Start calib zero");
             calib_state++;
             break;
         case 5:
             if (qei_sw_state == 1) {
                 reset_qei_sw();
-                calib_result = SoftPotMagic.autoCalibZero(zero_count == 0 ? true : false);
+                LCD.setCursor(0, 1);
+                LCD.print("Calib zero...");
+                calib_result = SoftPotMagic.autoCalibZero();
                 if (calib_result) {
-                    zero_count++;
-                }
-                if (zero_count >= 3) {
                     calib_state++;
+                } else {
+                    LCD.setCursor(0, 1);
+                    LCD.print("Failed!");
                 }
             }
             break;
@@ -313,7 +314,6 @@ void tp_calib(void) {
                 TestMenu.reset();
                 transition = true;
                 calib_state = 0;
-                zero_count = 0;
             }
             break;
     }
@@ -547,7 +547,7 @@ static void service_menu_setup(void) {
     
     SoftPotMagic.begin(SP_L, SP_R, respAnalogRead);
     SoftPotMagic.setCalib(&(cfg.tp_calib));
-    SoftPotMagic.setMinGapRatio(.10f);
+    SoftPotMagic.setMinGapRatioInt(cfg.tp_gap_ratio);
 
     TestMenu.begin();
     TestMenu.setMenuWrap(true);
@@ -557,8 +557,6 @@ static void service_menu_setup(void) {
 static void service_menu_loop(void) {
     // persistent tasks
     scan_qei_sw();
-    RAL.update();
-    RAR.update();
 
     // foreground task
     switch (_task) {

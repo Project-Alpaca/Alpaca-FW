@@ -6,7 +6,7 @@ void Settings::reset() {
     this->magic_ver = this->SETTINGS_VER;
     memset(&this->tp_calib, 0xff, sizeof(calib_t));
     this->tp_calib.zeroLevel = 0;
-    this->tp_gap_ratio = 0.0f;
+    this->tp_gap_ratio = 6554;
     memset(this->button_mapping, 0x00, 16 * sizeof(uint8_t));
     this->ds4_passthrough = false;
     this->perf_ctr = false;
