@@ -55,9 +55,10 @@ uint8_t lamps;
 uint16_t buttons;
 TPMode tp_mode;
 
-// Performance counters (scans-per-second and reports-per-second)
+// Performance counters (scans-per-second, reports-per-second and elapsed time during scanning)
 static uint16_t sps = 0;
 static uint16_t fps = 0;
+static uint32_t etds = 0;
 
 static inline void scan_buttons() {
     uint8_t lamps_new;
@@ -339,11 +340,15 @@ void setup() {
 
     // Callback for input scan event
     ScanEvent.attach([](EventResponderRef event) {
+        elapsedMicros elapsedTime = 0;
         DS4.update();
         scan_buttons();
         scan_touchpad();
         if (cfg.ds4_passthrough) handle_ds4_pass();
-        if (cfg.perf_ctr) sps++;
+        if (cfg.perf_ctr) {
+            etds += elapsedTime;
+            sps++;
+        }
     });
 
     // Callback for lower-speed input scan event (for reading rotary encoder values)
@@ -361,12 +366,18 @@ void setup() {
         if (cfg.perf_ctr) {
             LCD.setCursor(0, 0);
             LCD.print("                ");
+            // Reports (frames) per second
             LCD.setCursor(0, 0);
             LCD.print(fps);
-            LCD.setCursor(8, 0);
+            // Scans per second
+            LCD.setCursor(5, 0);
             LCD.print(sps);
+            // Average time per scan (in microseconds)
+            LCD.setCursor(10, 0);
+            LCD.print(etds / sps);
             fps = 0;
             sps = 0;
+            etds = 0;
         }
     });
 
