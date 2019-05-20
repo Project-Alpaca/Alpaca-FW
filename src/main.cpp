@@ -201,7 +201,8 @@ static inline void scan_touchpad(void) {
         case TPMode::TP:
             handle_touchpad_direct_mapping(pos1, pos2, tp_mode == TPMode::TP_C);
             break;
-        // ULRD
+        // D-Pad layout is ULRD, LR layout is L1L2R2R1
+        case TPMode::LR: // fall through
         case TPMode::DPAD: {
             DS4.clearTouchEvents();
             uint8_t tmpstate = 0;
@@ -215,15 +216,19 @@ static inline void scan_touchpad(void) {
             } else {
                 pos2 = 4;
             }
+            // 0 is the leftmost, 3 is the rightmost
             if (pos1 != 4) tmpstate |= 1 << pos1;
             if (pos2 != 4) tmpstate |= 1 << pos2;
-            DS4.setDpadUniversalSOCD(tmpstate & (1 << 0), tmpstate & (1 << 2), tmpstate & (1 << 3), tmpstate & (1 << 1));
+            if (tp_mode == TPMode::LR) {
+                DS4.setKeyUniversal(rds4api::Key::LButton, tmpstate & (1 << 0));
+                DS4.setKeyUniversal(rds4api::Key::LTrigger, tmpstate & (1 << 1));
+                DS4.setKeyUniversal(rds4api::Key::RTrigger, tmpstate & (1 << 2));
+                DS4.setKeyUniversal(rds4api::Key::RButton, tmpstate & (1 << 3));
+            } else {
+                DS4.setDpadUniversalSOCD(tmpstate & (1 << 0), tmpstate & (1 << 2), tmpstate & (1 << 3), tmpstate & (1 << 1));
+            }
             break;
         }
-        case TPMode::LR:
-            // TODO
-            DS4.clearTouchEvents();
-            break;
         default:
             break;
     }
