@@ -17,6 +17,8 @@ Teensyduino-based firmware for Project Diva Future Tone controller project based
 
 ## Build
 
+0. Install PlatformIO
+
 1. Execute patches/auto.sh under patches.
 ```shell
 cd patches && bash ./auto.sh
