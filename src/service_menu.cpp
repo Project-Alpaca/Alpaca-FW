@@ -23,7 +23,6 @@ MD_Menu::value_t *handle_int(MD_Menu::mnuId_t id, bool get);
 MD_Menu::value_t *handle_bool(MD_Menu::mnuId_t id, bool get);
 
 MD_Menu::value_t menu_buf;
-static uint8_t curr_button = 0;
 
 #ifndef TP_RESISTIVE
 #define TP_RESISTIVE
@@ -39,7 +38,6 @@ const MD_Menu::mnuHeader_t menus[] = {
     // id desc lower_item upper_item curr_item
     {10, "Service Menu", 10, 17, 0},
     {11, "Reboot", 20, 21, 0},
-    {12, "Button Config", 31, 32, 0},
     {13, "I/O Test", 40, 41, 0},
     {14, "TP Config", 50, 53, 0},
     {20, "TP SysConf", MENU_TP_MIN, MENU_TP_MAX, 0},
@@ -48,20 +46,16 @@ const MD_Menu::mnuHeader_t menus[] = {
 const MD_Menu::mnuItem_t menu_items[] = {
     // id desc item_type item_id
     {10, "I/O Test...", MD_Menu::MNU_MENU, 13},
-    {11, "Button Conf...", MD_Menu::MNU_MENU, 12},
-    {12, "TP Conf...", MD_Menu::MNU_MENU, 14},
-    {13, "TP SysConf...", MD_Menu::MNU_MENU, 20},
-    {14, "DS4 Redir.", MD_Menu::MNU_INPUT, 16},
-    {15, "Show PerfCtr.", MD_Menu::MNU_INPUT, 17},
-    {16, "Clear EEPROM", MD_Menu::MNU_INPUT, 18},
-    {17, "Reboot...", MD_Menu::MNU_MENU, 11},
+    {11, "TP Conf...", MD_Menu::MNU_MENU, 14},
+    {12, "TP SysConf...", MD_Menu::MNU_MENU, 20},
+    {13, "DS4 Redir.", MD_Menu::MNU_INPUT, 16},
+    {14, "Show PerfCtr.", MD_Menu::MNU_INPUT, 17},
+    {15, "Clear EEPROM", MD_Menu::MNU_INPUT, 18},
+    {16, "Reboot...", MD_Menu::MNU_MENU, 11},
 
     {20, "Main System", MD_Menu::MNU_INPUT, 20}, // action 20 resets the MCU
     {21, "Bootloader", MD_Menu::MNU_INPUT, 21}, // action 21 reboots into bootloader
 
-    //{30, "Source", MD_Menu::MNU_INPUT, 30},
-    {31, "ID", MD_Menu::MNU_INPUT, 31},
-    {32, "Assignment", MD_Menu::MNU_INPUT, 32},
 
     {40, "Button Test", MD_Menu::MNU_INPUT, 10},
     {41, "TP Test", MD_Menu::MNU_INPUT, 11},
@@ -89,8 +83,6 @@ const MD_Menu::mnuInput_t menu_actions[] = {
     {19, "Scans", MD_Menu::INP_INT, handle_int, 3, 0, 0, 255, 0, 10, nullptr},
     {20, "Restart?", MD_Menu::INP_RUN, reboot_wrapper, 0, 0, 0, 0, 0, 0, nullptr},
     {21, "Reboot to BL?", MD_Menu::INP_RUN, reboot_wrapper, 0, 0, 0, 0, 0, 0, nullptr},
-    {31, "ID", MD_Menu::INP_INT, handle_int, 2, 0, 0, 15, 0, 10, nullptr},
-    {32, "Btn.", MD_Menu::INP_LIST, handle_list, 3, 0, 0, 0, 0, 0, BUTTON_NAMES},
     {40, "Segments", MD_Menu::INP_INT, handle_int, 2, 1, 0, 20, 0, 10, nullptr},
     {41, "Multiplier", MD_Menu::INP_INT, handle_int, 2, 1, 0, 2, 0, 10, nullptr},
 };
@@ -383,14 +375,6 @@ MD_Menu::value_t *handle_list(MD_Menu::mnuId_t id, bool get) {
                 cfg.save();
             }
             break;
-        case 32:
-            if (get) {
-                menu_buf.value = cfg.button_mapping[curr_button];
-            } else {
-                cfg.button_mapping[curr_button] = menu_buf.value;
-                cfg.save();
-            }
-            break;
         default:
             return nullptr;
     }
@@ -413,13 +397,6 @@ MD_Menu::value_t *handle_int(MD_Menu::mnuId_t id, bool get) {
             } else {
                 cfg.stick_hold = menu_buf.value;
                 cfg.save();
-            }
-            break;
-        case 31:
-            if (get) {
-                menu_buf.value = curr_button & 0x0f;
-            } else {
-                curr_button = menu_buf.value & 0x0f;
             }
             break;
         // ATRF Max Segments

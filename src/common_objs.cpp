@@ -11,7 +11,7 @@ LiquidCrystalNew LCD(LCD_RS, LCD_E, LCD_D4, LCD_D5, LCD_D6, LCD_D7, 0xff);
 Settings cfg;
 
 // Common constants
-const char BUTTON_NAMES[] = "NUL|U|L|D|R|SQR|XRO|CIR|TRI|L1|R1|L2|R2|SHR|OPT|L3|R3|PS|TP";
+
 // Make sure the names are exactly 4 bytes long, otherwise mode display will NOT work
 // Might send a PR to MD_Menu for support of NUL-separated lists.
 const char TP_MODES[] = "TP  |DPAD|LR  |TP+C|ATRF";

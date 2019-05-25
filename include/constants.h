@@ -7,7 +7,6 @@ enum class TPMode : uint8_t {
     TP = 0, DPAD, LR, TP_C, ATRF, _TOTAL_MODES,
 };
 
-extern const char BUTTON_NAMES[];
 extern const char TP_MODES[];
 
 //#define TP_MODE_CUSTOM1 0x10
