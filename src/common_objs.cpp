@@ -13,9 +13,16 @@ Settings cfg;
 // Common constants
 const char BUTTON_NAMES[] = "NUL|U|L|D|R|SQR|XRO|CIR|TRI|L1|R1|L2|R2|SHR|OPT|L3|R3|PS|TP";
 // Make sure the names are exactly 4 bytes long, otherwise mode display will NOT work
-// Might send a PR to MD_Menu for support of NUL-splitted lists.
+// Might send a PR to MD_Menu for support of NUL-separated lists.
 const char TP_MODES[] = "TP  |DPAD|LR  |TP+C|ATRF";
 const uint16_t ATRF_SEG_WIDTH = 96;
+
+constexpr Button BUTTON_MAPPING[16] = {
+    Button::CIR, Button::XRO, Button::SQR, Button::TRI, Button::NUL, Button::NUL, Button::NUL, Button::NUL,
+    Button::OPT, Button::PS, Button::SHR, Button::NUL, Button::NUL, Button::NUL, Button::NUL, Button::NUL,
+};
+
+constexpr size_t BUTTON_MAPPING_LEN = sizeof(BUTTON_MAPPING) / sizeof(Button);
 
 const SPISettings SPI596 = SPISettings(2000000, MSBFIRST, SPI_MODE0);
 const SPISettings SPI4021 = SPISettings(2000000, MSBFIRST, SPI_MODE0);

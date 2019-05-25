@@ -62,6 +62,7 @@ static uint32_t etds = 0;
 
 static inline void scan_buttons() {
     uint8_t lamps_new;
+    uint8_t dpad = 0;
 
     digitalWrite(BTN_CSB, LOW);
     SPI.beginTransaction(SPI4021);
@@ -82,15 +83,67 @@ static inline void scan_buttons() {
         lamps = lamps_new;
     }
 
-    for (uint8_t i=0; i<16; i++) {
-        // TODO this is hacked to work (for now). We need to find a way to refactor this.
-        if (ISBTN(cfg.button_mapping[i])) {
-            if (!(buttons & (1 << i))) {
-                DS4.pressKey(BTN2DS4(cfg.button_mapping[i]));
-            } else {
-                DS4.releaseKey(BTN2DS4(cfg.button_mapping[i]));
-            }
+    for (size_t i=0; i<BUTTON_MAPPING_LEN; i++) {
+        bool pressed = !(buttons & (1 << i));
+        switch (BUTTON_MAPPING[i]) {
+        case Button::NUL:
+            break;
+        case Button::U:
+            dpad |= pressed;
+            break;
+        case Button::L:
+            dpad |= pressed << 1;
+            break;
+        case Button::D:
+            dpad |= pressed << 2;
+            break;
+        case Button::R:
+            dpad |= pressed << 3;
+            break;
+        case Button::SQR:
+            DS4.setKeyUniversal(rds4api::Key::Y, pressed);
+            break;
+        case Button::XRO:
+            DS4.setKeyUniversal(rds4api::Key::B, pressed);
+            break;
+        case Button::CIR:
+            DS4.setKeyUniversal(rds4api::Key::A, pressed);
+            break;
+        case Button::TRI:
+            DS4.setKeyUniversal(rds4api::Key::X, pressed);
+            break;
+        case Button::L1:
+            DS4.setKeyUniversal(rds4api::Key::LButton, pressed);
+            break;
+        case Button::R1:
+            DS4.setKeyUniversal(rds4api::Key::RButton, pressed);
+            break;
+        case Button::L2:
+            DS4.setKeyUniversal(rds4api::Key::LTrigger, pressed);
+            break;
+        case Button::R2:
+            DS4.setKeyUniversal(rds4api::Key::RTrigger, pressed);
+            break;
+        case Button::SHR:
+            DS4.setKeyUniversal(rds4api::Key::Select, pressed);
+            break;
+        case Button::OPT:
+            DS4.setKeyUniversal(rds4api::Key::Start, pressed);
+            break;
+        case Button::L3:
+            DS4.setKeyUniversal(rds4api::Key::LStick, pressed);
+            break;
+        case Button::R3:
+            DS4.setKeyUniversal(rds4api::Key::RStick, pressed);
+            break;
+        case Button::PS:
+            DS4.setKeyUniversal(rds4api::Key::Home, pressed);
+            break;
+        case Button::TP:
+            DS4.setKey(DS4.KEY_TP, pressed);
+            break;
         }
+        DS4.setDpadUniversalSOCD(dpad & 0b1, dpad & 0b1000, dpad & 0b100, dpad & 0b10);
     }
 }
 
