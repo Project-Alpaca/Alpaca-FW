@@ -385,7 +385,7 @@ void setup() {
     SoftPotMagic.setMinGapRatioInt(cfg.tp_gap_ratio);
 
     // Prevent incompatible value overflows the state
-    tp_mode = static_cast<TPMode>(cfg.default_tp_mode % static_cast<uint8_t>(TPMode::_TOTAL_MODES));
+    tp_mode = static_cast<TPMode>(static_cast<uint8_t>(cfg.default_tp_mode) % static_cast<uint8_t>(TPMode::_TOTAL_MODES));
 
     LCD.begin(16, 2);
     LCD.clear();

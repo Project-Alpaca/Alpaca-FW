@@ -369,9 +369,9 @@ MD_Menu::value_t *handle_list(MD_Menu::mnuId_t id, bool get) {
     switch (id) {
         case 13:
             if (get) {
-                menu_buf.value = cfg.default_tp_mode % static_cast<uint8_t>(TPMode::_TOTAL_MODES);
+                menu_buf.value = static_cast<uint8_t>(cfg.default_tp_mode) % static_cast<uint8_t>(TPMode::_TOTAL_MODES);
             } else {
-                cfg.default_tp_mode = menu_buf.value;
+                cfg.default_tp_mode = static_cast<TPMode>(menu_buf.value % static_cast<uint8_t>(TPMode::_TOTAL_MODES));
                 cfg.save();
             }
             break;

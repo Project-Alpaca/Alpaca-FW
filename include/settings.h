@@ -5,11 +5,13 @@
 #include <CRC32.h>
 #include <SoftPotMagic.h>
 
+#include "constants.h"
+
 struct SettingsData {
     uint32_t magic_ver;
     calib_t tp_calib;
     uint16_t tp_gap_ratio;
-    uint8_t default_tp_mode;
+    TPMode default_tp_mode;
     bool ds4_passthrough;
     bool perf_ctr;
     uint8_t stick_hold;
