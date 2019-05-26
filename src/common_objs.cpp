@@ -19,7 +19,7 @@ const uint16_t ATRF_SEG_WIDTH = 96;
 
 constexpr Button BUTTON_MAPPING[16] = {
     Button::CIR, Button::XRO, Button::SQR, Button::TRI, Button::NUL, Button::NUL, Button::NUL, Button::NUL,
-    Button::OPT, Button::PS, Button::SHR, Button::NUL, Button::NUL, Button::NUL, Button::NUL, Button::NUL,
+    Button::SHR, Button::PS, Button::OPT, Button::NUL, Button::NUL, Button::NUL, Button::NUL, Button::NUL,
 };
 
 constexpr size_t BUTTON_MAPPING_LEN = sizeof(BUTTON_MAPPING) / sizeof(Button);
