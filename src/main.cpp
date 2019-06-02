@@ -147,7 +147,7 @@ static inline void scan_buttons() {
     }
 }
 
-void handle_touchpad_direct_mapping(uint8_t pos1, uint8_t pos2, bool click) {
+void handle_touchpad_direct_mapping(uint8_t pos1, uint8_t pos2, bool click=false) {
     DS4.clearTouchEvents();
     if (pos1 != POS_FLOAT) {
         if (click) {
@@ -168,7 +168,7 @@ void handle_touchpad_direct_mapping(uint8_t pos1, uint8_t pos2, bool click) {
     }
 }
 
-void handle_touchpad_atrf(uint8_t pos1, uint8_t pos2) {
+void handle_touchpad_atrf(uint8_t pos1, uint8_t pos2, bool ttrf=false) {
     static uint8_t pos1_prev = POS_FLOAT, pos2_prev = POS_FLOAT;
     static uint8_t stick_hold_frames = 0;
     static bool released = true;
@@ -177,10 +177,9 @@ void handle_touchpad_atrf(uint8_t pos1, uint8_t pos2) {
     bool is_chain_slide = (DS4.getRumbleIntensityRight() > 0);
     bool dir_changed = false;
 
-    // Start fresh
-    DS4.clearTouchEvents();
-
     if (is_chain_slide) {
+        // Start fresh
+        DS4.clearTouchEvents();
         // immediately clear stick states
         stick_hold_frames = 0;
         if (pos1 != POS_FLOAT) {
@@ -193,8 +192,12 @@ void handle_touchpad_atrf(uint8_t pos1, uint8_t pos2) {
             DS4.finalizeTouchEvent();
         }
         // otherwise, do nothing since the touch is already released
+    // Handle TTRF (direct touchpad passthrough on normal slides)
+    } else if (ttrf) {
+        handle_touchpad_direct_mapping(pos1, pos2);
     } else {
-        // starts from an untouched touchpad
+        // starts from a clean touchpad state
+        DS4.clearTouchEvents();
         // if slider is being touched
         // TODO maybe make it less sensitive to turns
         if (pos1 != POS_FLOAT) {
@@ -249,6 +252,9 @@ static inline void scan_touchpad(void) {
     switch (tp_mode) {
         case TPMode::ATRF:
             handle_touchpad_atrf(pos1, pos2);
+            break;
+        case TPMode::TTRF:
+            handle_touchpad_atrf(pos1, pos2, true);
             break;
         case TPMode::TP_C:
         case TPMode::TP:

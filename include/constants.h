@@ -4,7 +4,7 @@
 #include <SPI.h>
 
 enum class TPMode : uint8_t {
-    TP = 0, DPAD, LR, TP_C, ATRF, _TOTAL_MODES,
+    TP = 0, DPAD, LR, TP_C, ATRF, TTRF, _TOTAL_MODES,
 };
 
 extern const char TP_MODES[];
