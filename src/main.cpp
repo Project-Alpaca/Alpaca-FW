@@ -243,6 +243,21 @@ void handle_touchpad_atrf(uint8_t pos1, uint8_t pos2, bool ttrf=false) {
     pos2_prev = pos2;
 }
 
+void handle_touchpad_ar(uint8_t pos1, uint8_t pos2) {
+    // https://twitter.com/pickingharres/status/1228902094737817600
+    uint32_t bf_sticks = 0x80808080ul;
+    uint32_t bf_raw = 0ul;
+    if (pos1 != POS_FLOAT) {
+        bf_raw |= 1 << (31 - (pos1 >> 3));
+        if (pos2 != POS_FLOAT) {
+            bf_raw |= 1 << (31 - (pos2 >> 3));
+        }
+        bf_sticks ^= bf_raw;
+    }
+    DS4.setStick(rds4api::Stick::L, bf_sticks & 0xffu, (bf_sticks >> 8) & 0xffu);
+    DS4.setStick(rds4api::Stick::R, (bf_sticks >> 16) & 0xffu, (bf_sticks >> 24) & 0xffu);
+}
+
 static inline void scan_touchpad(void) {
     uint8_t pos1 = POS_FLOAT, pos2 = POS_FLOAT;
     SoftPotMagic.update();
@@ -250,6 +265,9 @@ static inline void scan_touchpad(void) {
     pos2 = SoftPotMagic.pos2();
 
     switch (tp_mode) {
+        case TPMode::AR:
+            handle_touchpad_ar(pos1, pos2);
+            break;
         case TPMode::ATRF:
             handle_touchpad_atrf(pos1, pos2);
             break;

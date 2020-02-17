@@ -14,7 +14,7 @@ Settings cfg;
 
 // Make sure the names are exactly 4 bytes long, otherwise mode display will NOT work
 // Might send a PR to MD_Menu for support of NUL-separated lists.
-const char TP_MODES[] = "TP  |DPAD|LR  |TP+C|ATRF|TTRF";
+const char TP_MODES[] = "TP  |DPAD|LR  |TP+C|ATRF|TTRF|AR  ";
 const uint16_t ATRF_SEG_WIDTH = 96;
 
 constexpr Button BUTTON_MAPPING[16] = {
