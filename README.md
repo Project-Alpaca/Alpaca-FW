@@ -1,6 +1,6 @@
-# FT-Controller-FW
+# Alpaca-FW
 
-Teensyduino-based firmware for Project Diva Future Tone controller project based on Teensy 3.x/LC
+Teensyduino-based firmware for Alpaca v1 electronics. Runs on Teensy 3.x/LC.
 
 ## Features
 
